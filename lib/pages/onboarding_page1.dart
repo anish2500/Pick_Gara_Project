@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mero_choice_application/pages/dashboard_page.dart';
+import 'package:mero_choice_application/pages/signup_page.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingPage1 extends StatefulWidget {
@@ -72,7 +73,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => DashboardPage()),
+                MaterialPageRoute(builder: (context) => SignupPage()),
               );
             },
             child: Text(
@@ -313,7 +314,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
         if (isLastPage) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => DashboardPage()),
+            MaterialPageRoute(builder: (context) => SignupPage()),
           );
         } else {
           _pageController.nextPage(

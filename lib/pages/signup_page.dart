@@ -1,20 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mero_choice_application/features/auth/presentation/state/auth_state.dart';
+import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:mero_choice_application/pages/login_page.dart';
 import 'package:mero_choice_application/widgets/auth_richtext.dart';
 import 'package:mero_choice_application/widgets/my_button.dart';
 import 'package:mero_choice_application/widgets/my_textfield.dart';
 
-class SignupPage extends StatefulWidget {
+class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  ConsumerState<SignupPage> createState() => _SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class _SignupPageState extends ConsumerState<SignupPage> {
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isObscure = true;
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authViewModelProvider, (_, current) {
+      if (current.status == AuthStatus.registered) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account Created! Please login.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+        ref.read(authViewModelProvider.notifier).resetState();
+      }
+    });
+
+    final isLoading =
+        ref.watch(authViewModelProvider).status == AuthStatus.loading;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -68,6 +98,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 12),
                       MyTextfield(
+                        controller: _fullNameController,
                         hintText: 'John Doe',
                         prefixIcon: Icons.person,
                       ),
@@ -84,6 +115,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       SizedBox(height: 12),
                       MyTextfield(
+                        controller: _emailController,
                         hintText: 'john@example.com',
                         prefixIcon: Icons.email,
                       ),
@@ -99,6 +131,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       SizedBox(height: 12),
                       MyTextfield(
+                        controller: _passwordController,
                         hintText: '************',
                         prefixIcon: Icons.lock_outline_rounded,
                         obscureText: _isObscure,
@@ -113,7 +146,20 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       SizedBox(height: 50),
 
-                      MyButton(text: 'Sign Up', onTap: () {}),
+                      isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : MyButton(
+                              text: 'Sign Up',
+                              onTap: () {
+                                ref
+                                    .read(authViewModelProvider.notifier)
+                                    .register(
+                                      _fullNameController.text.trim(),
+                                      _emailController.text.trim(),
+                                      _passwordController.text.trim(),
+                                    );
+                              },
+                            ),
                       SizedBox(height: 30),
 
                       Align(
