@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mero_choice_application/core/theme/app_theme.dart';
 import '../pages/splash_page.dart';
 import '../pages/onboarding_page1.dart';
 import '../pages/login_page.dart';
@@ -12,6 +13,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashPage(),

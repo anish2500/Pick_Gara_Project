@@ -1,11 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 
 class AuthRichtext extends StatelessWidget {
   final String leadingtext;
   final String actionText;
-
   final VoidCallback onTap;
+
   const AuthRichtext({
     super.key,
     required this.leadingtext,
@@ -17,21 +18,14 @@ class AuthRichtext extends StatelessWidget {
   Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
-        style: const TextStyle(fontFamily: 'SF', fontSize: 14),
         children: [
           TextSpan(
             text: leadingtext,
-            style: const TextStyle(
-              color: Color(0xFF605F6A),
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.authLeading,
           ),
           TextSpan(
             text: actionText,
-            style: const TextStyle(
-              color: Color(0xFF453CE1),
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyles.authAction,
             recognizer: TapGestureRecognizer()..onTap = onTap,
           ),
         ],
