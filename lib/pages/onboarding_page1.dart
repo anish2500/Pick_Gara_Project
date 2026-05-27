@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mero_choice_application/pages/dashboard_page.dart';
+import 'package:mero_choice_application/core/theme/app_colors.dart';
+import 'package:mero_choice_application/core/theme/app_spacing.dart';
+import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/pages/signup_page.dart';
+import 'package:mero_choice_application/widgets/my_button.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardingPage1 extends StatefulWidget {
@@ -33,12 +36,12 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
-            SizedBox(height: 80),
+            const SizedBox(height: 80),
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -54,37 +57,28 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenH,
+        vertical: AppSpacing.screenV,
+      ),
       child: Row(
         children: [
-          Icon(Icons.arrow_back_outlined, size: 28, color: Color(0xFF453CE1)),
-          SizedBox(width: 15),
-          Text(
-            'PickGara',
-            style: TextStyle(
-              fontFamily: 'SF',
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF453CE1),
-            ),
+          Icon(
+            Icons.arrow_back_outlined,
+            size: AppSpacing.iconLg,
+            color: AppColors.primary,
           ),
-          Spacer(),
+          const SizedBox(width: 15),
+          Text('PickGara', style: AppTextStyles.headingXL),
+          const Spacer(),
           GestureDetector(
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => SignupPage()),
+                MaterialPageRoute(builder: (context) => const SignupPage()),
               );
             },
-            child: Text(
-              'Skip',
-              style: TextStyle(
-                fontFamily: 'SF',
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
+            child: Text('Skip', style: AppTextStyles.skip),
           ),
         ],
       ),
@@ -107,31 +101,21 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
         Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.only(left: 30),
+            padding: const EdgeInsets.only(left: AppSpacing.screenH),
             child: Text(
               'Decision Fatigue?',
-              style: TextStyle(
-                fontFamily: 'SF',
-                fontSize: 30,
-                color: Color(0xFF453CE1),
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTextStyles.displayXL,
             ),
           ),
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.only(left: 30),
+            padding: const EdgeInsets.only(left: AppSpacing.screenH),
             child: Text(
               'Stop the endless back-and-\nforth. PickGara helps your group\ndecide faster',
-              style: TextStyle(
-                fontFamily: 'SF',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
+              style: AppTextStyles.bodyL,
             ),
           ),
         ),
@@ -143,16 +127,16 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
     return SingleChildScrollView(
       child: Column(
         children: [
+          // ── Preview place card ───────────────────────────────
           Container(
             width: 280,
             height: 250,
-            // transform: Matrix4.rotationZ(-2 * 0.03),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              boxShadow: const [
                 BoxShadow(
-                  color: const Color.fromARGB(255, 190, 190, 190),
+                  color: AppColors.cardShadow,
                   blurRadius: 4,
                 ),
               ],
@@ -161,57 +145,41 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppSpacing.radiusXl),
+                    topRight: Radius.circular(AppSpacing.radiusXl),
                   ),
                   child: Image.asset(
                     'assets/images/cafe.jpg',
                     fit: BoxFit.cover,
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'RoadHouse Cafe ',
-                        style: TextStyle(
-                          fontFamily: 'SF',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
+                      Text('RoadHouse Cafe', style: AppTextStyles.titleM),
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.star,
-                            color: const Color.fromARGB(255, 36, 97, 64),
-                            size: 16,
+                            color: AppColors.ratingGreen,
+                            size: AppSpacing.iconSm,
                           ),
-                          SizedBox(width: 4),
-                          Text(
-                            '4.9',
-                            style: TextStyle(
-                              fontFamily: 'SF',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 36, 97, 64),
-                            ),
-                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text('4.9', style: AppTextStyles.rating),
                         ],
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                   child: Row(
-                    children: [
+                    children: const [
                       Text(
                         'Cafe & Restro',
                         style: TextStyle(
@@ -223,11 +191,11 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
                       ),
                       SizedBox(width: 10),
                       Padding(
-                        padding: const EdgeInsets.only(top: 3),
+                        padding: EdgeInsets.only(top: 3),
                         child: Icon(
                           Icons.circle_rounded,
                           size: 6,
-                          color: Colors.black,
+                          color: AppColors.black,
                         ),
                       ),
                       SizedBox(width: 12),
@@ -246,35 +214,28 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
               ],
             ),
           ),
-          SizedBox(height: 20),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          // ── Section heading ──────────────────────────────────
           Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: const EdgeInsets.only(left: 30),
+              padding: const EdgeInsets.only(left: AppSpacing.screenH),
               child: Text(
                 'Democratic\nDecsions',
-                style: TextStyle(
-                  fontFamily: 'SF',
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF453CE1),
-                ),
+                style: AppTextStyles.displayXL,
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: const EdgeInsets.only(left: 30),
+              padding: const EdgeInsets.only(left: AppSpacing.screenH),
               child: Text(
                 'Every voice counts. Swipe through\noptions and find common ground \ninstantly.',
-                style: TextStyle(
-                  fontFamily: 'SF',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
-                ),
+                style: AppTextStyles.bodyL,
               ),
             ),
           ),
@@ -285,22 +246,22 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
 
   Widget _buildBottom() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       child: Column(
         children: [
           SmoothPageIndicator(
             controller: _pageController,
             count: 2,
             effect: const ExpandingDotsEffect(
-              activeDotColor: Color(0xFF453CE1),
-              dotColor: Colors.grey,
+              activeDotColor: AppColors.primary,
+              dotColor: AppColors.textSecondary,
               dotHeight: 10,
               dotWidth: 10,
               expansionFactor: 4,
               spacing: 8,
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
           _buildButton(),
         ],
       ),
@@ -309,12 +270,15 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
 
   Widget _buildButton() {
     final isLastPage = _currentPage == 1;
-    return ElevatedButton(
-      onPressed: () {
+    return MyButton(
+      text: isLastPage ? 'GET STARTED' : 'NEXT',
+      width: AppSpacing.buttonWidthMd,
+      height: AppSpacing.buttonHeightMd,
+      onTap: () {
         if (isLastPage) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => SignupPage()),
+            MaterialPageRoute(builder: (context) => const SignupPage()),
           );
         } else {
           _pageController.nextPage(
@@ -323,34 +287,6 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
           );
         }
       },
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-      ),
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF453CE1), Color.fromARGB(255, 108, 100, 216)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Container(
-          width: 330,
-          height: 50,
-          alignment: Alignment.center,
-          child: Text(
-            isLastPage ? 'GET STARTED' : 'NEXT',
-            style: TextStyle(
-              fontFamily: 'SF',
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

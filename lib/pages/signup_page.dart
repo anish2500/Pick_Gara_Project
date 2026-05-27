@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mero_choice_application/core/theme/app_colors.dart';
+import 'package:mero_choice_application/core/theme/app_spacing.dart';
+import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/auth/presentation/state/auth_state.dart';
 import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:mero_choice_application/pages/login_page.dart';
@@ -45,91 +48,55 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
     final isLoading =
         ref.watch(authViewModelProvider).status == AuthStatus.loading;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.scaffoldBg,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 78),
+                  const SizedBox(height: AppSpacing.x8l),
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 108,
-                    width: 130,
+                    height: AppSpacing.logoHeightAuth,
+                    width: AppSpacing.logoWidthAuth,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     'DECIDE TOGETHER, SILENTLY',
-                    style: TextStyle(
-                      fontFamily: 'SF-Medium',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color.fromARGB(255, 96, 95, 106),
-                    ),
+                    style: AppTextStyles.tagline,
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     'Create Account',
-                    style: TextStyle(
-                      fontFamily: 'SF',
-                      fontSize: 25,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF453CE1),
-                    ),
+                    style: AppTextStyles.screenTitle,
                   ),
-
-                  const SizedBox(height: 40),
-
+                  const SizedBox(height: AppSpacing.x4l),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Full Name',
-                        style: TextStyle(
-                          fontFamily: 'SF',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF464555),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                      Text('Full Name', style: AppTextStyles.bodyM),
+                      const SizedBox(height: AppSpacing.md),
                       MyTextfield(
                         controller: _fullNameController,
                         hintText: 'John Doe',
                         prefixIcon: Icons.person,
                       ),
-
-                      SizedBox(height: 20),
-                      Text(
-                        'Email',
-                        style: TextStyle(
-                          fontFamily: 'SF',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF464555),
-                        ),
-                      ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.xl),
+                      Text('Email', style: AppTextStyles.bodyM),
+                      const SizedBox(height: AppSpacing.md),
                       MyTextfield(
                         controller: _emailController,
                         hintText: 'john@example.com',
                         prefixIcon: Icons.email,
                       ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Password',
-                        style: TextStyle(
-                          fontFamily: 'SF',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF464555),
-                        ),
-                      ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.xl),
+                      Text('Password', style: AppTextStyles.bodyM),
+                      const SizedBox(height: AppSpacing.md),
                       MyTextfield(
                         controller: _passwordController,
                         hintText: '************',
@@ -144,8 +111,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           });
                         },
                       ),
-                      SizedBox(height: 50),
-
+                      const SizedBox(height: AppSpacing.x5l),
                       isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : MyButton(
@@ -160,8 +126,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                     );
                               },
                             ),
-                      SizedBox(height: 30),
-
+                      const SizedBox(height: AppSpacing.x3l),
                       Align(
                         alignment: Alignment.center,
                         child: AuthRichtext(

@@ -1,39 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:mero_choice_application/core/theme/app_colors.dart';
+import 'package:mero_choice_application/core/theme/app_spacing.dart';
+import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 
+/// Full-width gradient pill button.
+/// Used on: Join With Pin, Create Session, Return Home, Start Swiping, Create a room.
+/// Supports optional leading icon (e.g. "+" on Create Session).
 class MyButton extends StatelessWidget {
   final String text;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isLoading;
+  final IconData? leadingIcon;
+  final double? width;
+  final double? height;
 
-  const MyButton({super.key, required this.text, required this.onTap});
+  const MyButton({
+    super.key,
+    required this.text,
+    this.onTap,
+    this.isLoading = false,
+    this.leadingIcon,
+    this.width,
+    this.height,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       child: Container(
-        width: double.infinity,
-        height: 60,
+        width: width ?? double.infinity,
+        height: height ?? AppSpacing.buttonHeightLg,
         decoration: BoxDecoration(
-          color: const Color(0xFF453CE1),
-          borderRadius: BorderRadius.circular(30),
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF453CE1).withOpacity(0.3),
-              spreadRadius: 1,
+              color: AppColors.primaryShadow,
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              spreadRadius: 1,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'SF',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    color: AppColors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (leadingIcon != null) ...[
+                      Icon(
+                        leadingIcon,
+                        color: AppColors.white,
+                        size: AppSpacing.iconMd,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                    ],
+                    Text(text, style: AppTextStyles.buttonL),
+                  ],
+                ),
         ),
       ),
     );
