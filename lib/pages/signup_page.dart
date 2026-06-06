@@ -6,9 +6,11 @@ import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/auth/presentation/state/auth_state.dart';
 import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:mero_choice_application/pages/login_page.dart';
+import 'package:mero_choice_application/widgets/app_snackbar.dart';
 import 'package:mero_choice_application/widgets/auth_richtext.dart';
 import 'package:mero_choice_application/widgets/my_button.dart';
 import 'package:mero_choice_application/widgets/my_textfield.dart';
+
 
 class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
@@ -35,9 +37,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authViewModelProvider, (_, current) {
       if (current.status == AuthStatus.registered) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account Created! Please login.')),
-        );
+        AppSnackBar.showSuccess(context, 'Account Created! Please login.');
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginPage()),

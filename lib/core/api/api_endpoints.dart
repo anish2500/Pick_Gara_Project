@@ -3,9 +3,21 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static final String baseUrl = kIsWeb
-      ? 'http://localhost:4000/api'
-      : 'http://10.0.2.2:4000/api';
+  // true = Emulator, false = Physical Device
+  static const bool useEmulator = false;
+
+  static const String _emulator = '10.0.2.2';
+  static const String _physical = '192.168.137.1';
+
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:4000/api';
+    }
+    return useEmulator
+        ? 'http://$_emulator:4000/api'
+        : 'http://$_physical:4000/api';
+  }
+
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 

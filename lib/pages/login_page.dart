@@ -6,6 +6,7 @@ import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/auth/presentation/state/auth_state.dart';
 import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:mero_choice_application/pages/signup_page.dart';
+import 'package:mero_choice_application/widgets/app_snackbar.dart';
 import 'package:mero_choice_application/widgets/auth_richtext.dart';
 import 'package:mero_choice_application/widgets/my_button.dart';
 import 'package:mero_choice_application/widgets/my_textfield.dart';
@@ -35,9 +36,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (current.status == AuthStatus.authenticated) {
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else if (current.status == AuthStatus.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(current.errorMessage ?? 'Login failed')),
-        );
+        AppSnackBar.showError(context, current.errorMessage ?? 'Login failed');
         ref.read(authViewModelProvider.notifier).resetState();
       }
     });
