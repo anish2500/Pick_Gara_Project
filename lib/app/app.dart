@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mero_choice_application/core/theme/app_theme.dart';
-import '../pages/splash_page.dart';
-import '../pages/onboarding_page1.dart';
-import '../pages/login_page.dart';
-import '../pages/signup_page.dart';
+import 'package:mero_choice_application/pages/login_page.dart';
+import 'package:mero_choice_application/pages/onboarding_page1.dart';
+import 'package:mero_choice_application/pages/signup_page.dart';
+import 'package:mero_choice_application/pages/splash_page.dart';
 import '../pages/dashboard_page.dart';
 
 class App extends StatelessWidget {
@@ -18,8 +18,8 @@ class App extends StatelessWidget {
       routes: {
         '/': (context) => const SplashPage(),
         '/onboarding': (context) => const OnboardingPage1(),
-        '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
+        '/login': (context) => const LoginPage(),
         '/dashboard': (context) => const DashboardPage(),
       },
     );

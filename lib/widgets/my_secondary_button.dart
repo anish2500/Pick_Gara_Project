@@ -13,6 +13,9 @@ class MySecondaryButton extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData? leadingIcon;
   final AppSecondaryButtonVariant variant;
+  final Color? textColor; 
+  final Color ? iconColor; 
+  final Color ? backgroundColor; 
 
   const MySecondaryButton({
     super.key,
@@ -20,6 +23,9 @@ class MySecondaryButton extends StatelessWidget {
     this.onTap,
     this.leadingIcon,
     this.variant = AppSecondaryButtonVariant.text,
+    this.textColor, 
+    this.iconColor, 
+    this.backgroundColor,
   });
 
   @override
@@ -46,7 +52,7 @@ class MySecondaryButton extends StatelessWidget {
             ],
             Text(
               text,
-              style: AppTextStyles.buttonL.copyWith(color: AppColors.primary),
+              style: AppTextStyles.buttonL.copyWith(color: textColor?? AppColors.primary),
             ),
           ],
         ),
