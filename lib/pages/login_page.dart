@@ -34,6 +34,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authViewModelProvider, (_, current) {
       if (current.status == AuthStatus.authenticated) {
+        AppSnackBar.showSuccess(context, 'Login Successful!');
+        ref.read(authViewModelProvider.notifier).resetState();
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else if (current.status == AuthStatus.error) {
         AppSnackBar.showError(context, current.errorMessage ?? 'Login failed');
@@ -50,7 +52,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         child: SingleChildScrollView(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenH,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -66,10 +70,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     style: AppTextStyles.tagline,
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    'Welcome Back',
-                    style: AppTextStyles.screenTitle,
-                  ),
+                  Text('Welcome Back', style: AppTextStyles.screenTitle),
                   const SizedBox(height: AppSpacing.x4l),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mero_choice_application/features/auth/presentation/state/auth_state.dart';
+import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -19,14 +22,15 @@ class _SplashPageState extends State<SplashPage>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/onboarding');
+        await ref.read(authViewModelProvider.notifier).getCurrentUser();
       }
     });
   }
@@ -39,6 +43,13 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authViewModelProvider, (_, current) {
+      if (current.status == AuthStatus.authenticated) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      } else if (current.status == AuthStatus.unauthenticated) {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      }
+    });
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -55,7 +66,8 @@ class _SplashPageState extends State<SplashPage>
                   fontFamily: 'SF',
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Color.fromARGB(255, 84, 84, 84)             ),
+                  color: Color.fromARGB(255, 84, 84, 84),
+                ),
               ),
             ],
           ),
