@@ -3,7 +3,6 @@ import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/widgets/active_session_card.dart';
-import 'package:mero_choice_application/widgets/app_bottom_nav_bar.dart';
 import 'package:mero_choice_application/widgets/match_card.dart';
 import 'package:mero_choice_application/widgets/my_button.dart';
 import 'package:mero_choice_application/widgets/my_secondary_button.dart';
@@ -16,8 +15,6 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  int _selectedIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,10 +48,6 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: (i) => setState(() => _selectedIndex = i),
-      ),
     );
   }
 
@@ -76,7 +69,7 @@ class _DashboardPageState extends State<DashboardPage> {
           CircleAvatar(
             radius: 26,
             backgroundColor: AppColors.primaryBg,
-            backgroundImage: const AssetImage('assets/images/cafe.jpg'),
+            backgroundImage: const AssetImage('assets/images/avatar.png'),
           ),
         ],
       ),
@@ -110,9 +103,11 @@ class _DashboardPageState extends State<DashboardPage> {
             MyButton(
               text: 'CREATE SESSION',
               leadingIcon: Icons.add_circle_outline_rounded,
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/create-room');
+              },
             ),
-            const SizedBox(height: 18,),
+            const SizedBox(height: 18),
             MySecondaryButton(
               text: 'JOIN ROOM',
               leadingIcon: Icons.login_rounded,
@@ -176,18 +171,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 voteCount: 3,
                 totalVotes: 5,
               ),
-              VoteItem(
-                rank: 2,
-                name: 'Michael',
-                voteCount: 2,
-                totalVotes: 5,
-              ),
+              VoteItem(rank: 2, name: 'Michael', voteCount: 2, totalVotes: 5),
             ],
             progress: 0.6,
             avatarAssets: const [
-              'assets/images/cafe.jpg',
-              'assets/images/cafe.jpg',
-              'assets/images/cafe.jpg',
+              'assets/images/male1.png',
+              'assets/images/male2.png',
+              'assets/images/male3.png',
             ],
             onSwipe: () {},
           ),
@@ -207,9 +197,7 @@ class _DashboardPageState extends State<DashboardPage> {
           height: 190,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenH,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
             children: [
               MatchCard(
                 imageAsset: 'assets/images/cafe.jpg',
@@ -219,9 +207,16 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(width: AppSpacing.md),
               MatchCard(
-                imageAsset: 'assets/images/cafe.jpg',
-                name: 'Roadhouse Cafe',
-                location: 'Baudha, Kathmandu • 2.3 miles',
+                imageAsset: 'assets/images/pizza.jpg',
+                name: 'Pizza Nation',
+                location: 'Jhamsikhel, Kathmandu • 3.9 miles',
+                onTap: () {},
+              ),
+              const SizedBox(width: AppSpacing.md),
+              MatchCard(
+                imageAsset: 'assets/images/hiking.jpg',
+                name: 'Shivapuri Hiking',
+                location: 'Gokarneshowr, Kathmandu • 4.9 miles',
                 onTap: () {},
               ),
             ],
@@ -230,5 +225,4 @@ class _DashboardPageState extends State<DashboardPage> {
       ],
     );
   }
-
 }
