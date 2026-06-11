@@ -7,7 +7,7 @@ class ApiEndpoints {
   static const bool useEmulator = false;
 
   static const String _emulator = '10.0.2.2';
-  static const String _physical = '192.168.137.1';
+  static const String _physical = '192.168.18.4';
 
   static String get baseUrl {
     if (kIsWeb) {

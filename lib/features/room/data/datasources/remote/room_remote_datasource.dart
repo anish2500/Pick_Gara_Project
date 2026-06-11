@@ -6,9 +6,7 @@ import 'package:mero_choice_application/features/room/data/datasources/room_data
 import 'package:mero_choice_application/features/room/data/models/room_api_model.dart';
 
 final roomRemoteDatasourceProvider = Provider<RoomRemoteDatasource>((ref) {
-  return RoomRemoteDatasource(
-    dio: ref.read(apiClientProvider),
-  );
+  return RoomRemoteDatasource(dio: ref.read(apiClientProvider));
 });
 
 class RoomRemoteDatasource implements IRoomRemoteDataSource {
@@ -24,5 +22,22 @@ class RoomRemoteDatasource implements IRoomRemoteDataSource {
     );
     final roomJson = response.data['room'] as Map<String, dynamic>;
     return RoomApiModel.fromJson(roomJson);
+  }
+
+  @override
+  Future<RoomApiModel> joinRoom(String pin) async {
+    final response = await _dio.post(
+      '${ApiEndpoints.rooms}/join',
+      data: {'pin': pin},
+    );
+
+    final roomJson = response.data['room'] as Map<String, dynamic>;
+    return RoomApiModel.fromJson(roomJson);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getRoomDetail(String roomId) async {
+    final response = await _dio.get('${ApiEndpoints.rooms}/$roomId');
+    return response.data as Map<String, dynamic>; 
   }
 }

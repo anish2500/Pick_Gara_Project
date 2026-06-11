@@ -4,6 +4,8 @@ import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_entity.dart';
+import 'package:mero_choice_application/features/room/presentation/page/swiping_room_page.dart';
+
 import 'package:mero_choice_application/widgets/my_button.dart';
 
 class SessionRoomPage extends StatelessWidget {
@@ -20,8 +22,11 @@ class SessionRoomPage extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: AppColors.primary),
-          onPressed: () =>
-              Navigator.pushNamedAndRemoveUntil(context, '/create-room', (route)=> false,)
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/create-room',
+            (route) => false,
+          ),
         ),
         title: Text(
           'Session Room',
@@ -167,7 +172,17 @@ class SessionRoomPage extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            MyButton(text: 'Start Swiping', onTap: () {}),
+            MyButton(
+              text: 'Start Swiping',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SwipingRoomPage(room: room),
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: AppSpacing.x3l),
           ],
         ),
