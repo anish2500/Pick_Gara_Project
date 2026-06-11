@@ -112,7 +112,9 @@ class _DashboardPageState extends State<DashboardPage> {
               text: 'JOIN ROOM',
               leadingIcon: Icons.login_rounded,
               variant: AppSecondaryButtonVariant.text,
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/join-room');
+              },
             ),
           ],
         ),

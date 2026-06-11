@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mero_choice_application/core/theme/app_theme.dart';
 import 'package:mero_choice_application/features/room/presentation/page/create_room_page.dart';
+import 'package:mero_choice_application/features/room/presentation/page/join_room_page.dart';
 import 'package:mero_choice_application/pages/login_page.dart';
 import 'package:mero_choice_application/pages/main_page.dart';
 import 'package:mero_choice_application/pages/onboarding_page1.dart';
@@ -23,6 +24,7 @@ class App extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/dashboard': (context) => const MainPage(),
         '/create-room': (context) => const CreateRoomPage(),
+        '/join-room': (context)=> const JoinRoomPage()
       },
     );
   }
