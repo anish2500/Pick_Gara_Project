@@ -25,4 +25,6 @@ class ApiEndpoints {
   static const String register = '/auth/register';
 
   static const String rooms = '/rooms'; 
+
+  static String voteForRoom(String roomId) => '/rooms/$roomId/vote';
 }

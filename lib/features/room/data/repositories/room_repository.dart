@@ -8,6 +8,7 @@ import 'package:mero_choice_application/features/room/data/models/room_api_model
 import 'package:mero_choice_application/features/room/domain/entities/room_detail_entity.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_entity.dart';
 import 'package:mero_choice_application/features/room/domain/repositories/room_repository.dart';
+import 'package:mero_choice_application/features/vote/data/models/vote_stats_api_model.dart';
 
 final roomRepositoryProvider = Provider<IRoomRepository>((ref) {
   return RoomRepository(
@@ -91,11 +92,18 @@ class RoomRepository implements IRoomRepository {
           )
           .toList();
 
+      final voteStats = data['voteStats'] != null
+          ? VoteStatsApiModel.fromJson(
+              data['voteStats'] as Map<String, dynamic>,
+            ).toEntity()
+          : null;
+
       return Right(
         RoomDetailEntity(
           room: roomModel.toEntity(),
           places: places,
           memberCount: memberCount,
+          voteStats: voteStats,
         ),
       );
     } on DioException catch (e) {

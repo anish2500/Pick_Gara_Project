@@ -5,10 +5,10 @@ import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/place/domain/entities/place_entity.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_entity.dart';
+import 'package:mero_choice_application/features/room/presentation/page/waiting_room_page.dart';
 import 'package:mero_choice_application/features/room/presentation/state/swipe_session_state.dart';
 import 'package:mero_choice_application/features/room/presentation/view_model/swipe_session_view_model.dart';
 import 'package:mero_choice_application/widgets/app_snackbar.dart';
-
 
 class SwipingRoomPage extends ConsumerStatefulWidget {
   final RoomEntity room;
@@ -37,7 +37,21 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
     ref.listen<SwipeSessionState>(swipeSessionViewModelProvider, (_, current) {
       if (current.status == SwipeStatus.error) {
         AppSnackBar.showError(
-            context, current.errorMessage ?? 'Failed to load session');
+          context,
+          current.errorMessage ?? 'Failed to load session',
+        );
+      } else if (current.status == SwipeStatus.completed &&
+          current.detail != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => WaitingRoomPage(
+              room: widget.room,
+              detail: current.detail!,
+              voteStats: current.voteStats,
+            ),
+          ),
+        );
       }
     });
 
@@ -47,10 +61,15 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
         backgroundColor: AppColors.scaffoldBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.primary),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.primary,
+          ),
           onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context, '/dashboard', (route) => false),
+            context,
+            '/dashboard',
+            (route) => false,
+          ),
         ),
         title: Text(
           'Swiping Room',
@@ -67,11 +86,15 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
       case SwipeStatus.initial:
       case SwipeStatus.loading:
         return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary));
+          child: CircularProgressIndicator(color: AppColors.primary),
+        );
       case SwipeStatus.error:
         return Center(
-            child: Text(swipeState.errorMessage ?? 'Something went wrong',
-                style: AppTextStyles.bodyM));
+          child: Text(
+            swipeState.errorMessage ?? 'Something went wrong',
+            style: AppTextStyles.bodyM,
+          ),
+        );
       case SwipeStatus.completed:
         return _buildCompletedView(swipeState);
       case SwipeStatus.loaded:
@@ -94,32 +117,44 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
           // ── Votes row ─────────────────────────────────────
           Row(
             children: [
-              Text('Votes: ',
-                  style: AppTextStyles.bodyM
-                      .copyWith(color: AppColors.textSecondary)),
               Text(
-                '$votedCount/$totalCards',
+                'Votes: ',
                 style: AppTextStyles.bodyM.copyWith(
-                    color: AppColors.primary, fontWeight: FontWeight.w700),
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                swipeState.voteStats?.display ?? '$votedCount/$totalCards',
+                style: AppTextStyles.bodyM.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm, vertical: 4),
+                  horizontal: AppSpacing.sm,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBg,
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusFull),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.people_rounded,
-                        size: 14, color: AppColors.primary),
+                    const Icon(
+                      Icons.people_rounded,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 4),
-                    Text('${detail.memberCount}',
-                        style: AppTextStyles.caption.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600)),
+                    Text(
+                      '${detail.memberCount}',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -143,7 +178,9 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
           Center(
             child: Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
@@ -151,14 +188,18 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.restaurant_menu_rounded,
-                      color: AppColors.white, size: 16),
+                  const Icon(
+                    Icons.restaurant_menu_rounded,
+                    color: AppColors.white,
+                    size: 16,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     'Voting: ${detail.room.name}',
                     style: AppTextStyles.bodyM.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w600),
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -172,12 +213,15 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
             child: _SwipeCardStack(
               places: detail.places,
               currentIndex: swipeState.currentIndex,
-              onLike: () =>
-                  ref.read(swipeSessionViewModelProvider.notifier).swipeLike(),
-              onDislike: () =>
-                  ref.read(swipeSessionViewModelProvider.notifier).swipeDislike(),
-              onSkip: () =>
-                  ref.read(swipeSessionViewModelProvider.notifier).swipeSkip(),
+              onLike: () => ref
+                  .read(swipeSessionViewModelProvider.notifier)
+                  .swipeLike(widget.room.roomId!),
+              onDislike: () => ref
+                  .read(swipeSessionViewModelProvider.notifier)
+                  .swipeDislike(widget.room.roomId!),
+              onSkip: () => ref
+                  .read(swipeSessionViewModelProvider.notifier)
+                  .swipeSkip(widget.room.roomId!),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -199,8 +243,9 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
           color: AppColors.error,
           backgroundColor: AppColors.white,
           size: 52,
-          onTap: () =>
-              ref.read(swipeSessionViewModelProvider.notifier).swipeDislike(),
+          onTap: () => ref
+              .read(swipeSessionViewModelProvider.notifier)
+              .swipeDislike(widget.room.roomId!),
         ),
         const SizedBox(width: AppSpacing.xl),
         _ActionButton(
@@ -208,8 +253,9 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
           color: AppColors.white,
           backgroundColor: AppColors.primary,
           size: 64,
-          onTap: () =>
-              ref.read(swipeSessionViewModelProvider.notifier).swipeLike(),
+          onTap: () => ref
+              .read(swipeSessionViewModelProvider.notifier)
+              .swipeLike(widget.room.roomId!),
         ),
         const SizedBox(width: AppSpacing.xl),
         _ActionButton(
@@ -217,8 +263,9 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
           color: AppColors.warning,
           backgroundColor: AppColors.white,
           size: 52,
-          onTap: () =>
-              ref.read(swipeSessionViewModelProvider.notifier).swipeSkip(),
+          onTap: () => ref
+              .read(swipeSessionViewModelProvider.notifier)
+              .swipeSkip(widget.room.roomId!),
         ),
       ],
     );
@@ -235,33 +282,46 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
               width: 80,
               height: 80,
               decoration: const BoxDecoration(
-                  color: AppColors.primaryBg, shape: BoxShape.circle),
-              child: const Icon(Icons.check_circle_rounded,
-                  color: AppColors.primary, size: 40),
+                color: AppColors.primaryBg,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.primary,
+                size: 40,
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
             Text('All Done!', style: AppTextStyles.headingL),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'You liked ${swipeState.likedPlaceIds.length} places.',
-              style: AppTextStyles.bodyM
-                  .copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.x3l),
             ElevatedButton(
               onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                  context, '/dashboard', (route) => false),
+                context,
+                '/dashboard',
+                (route) => false,
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50)),
+                  borderRadius: BorderRadius.circular(50),
+                ),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.x3l, vertical: 14),
+                  horizontal: AppSpacing.x3l,
+                  vertical: 14,
+                ),
               ),
-              child: Text('Back to Home',
-                  style: AppTextStyles.buttonM
-                      .copyWith(color: AppColors.white)),
+              child: Text(
+                'Back to Home',
+                style: AppTextStyles.buttonM.copyWith(color: AppColors.white),
+              ),
             ),
           ],
         ),
@@ -373,14 +433,18 @@ class _SwipeCardStackState extends State<_SwipeCardStack> {
                         top: 24,
                         left: 20,
                         child: _OverlayLabel(
-                            text: 'LIKE', color: AppColors.success),
+                          text: 'LIKE',
+                          color: AppColors.success,
+                        ),
                       ),
                     if (showDislike)
                       Positioned(
                         top: 24,
                         right: 20,
                         child: _OverlayLabel(
-                            text: 'NOPE', color: AppColors.error),
+                          text: 'NOPE',
+                          color: AppColors.error,
+                        ),
                       ),
                   ],
                 ),
@@ -446,15 +510,19 @@ class _SwipeCard extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(AppSpacing.radiusXl)),
+                top: Radius.circular(AppSpacing.radiusXl),
+              ),
               child: Image.network(
                 place.image,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   color: AppColors.primaryBg,
-                  child: const Icon(Icons.image_not_supported_outlined,
-                      color: AppColors.primary, size: 40),
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    color: AppColors.primary,
+                    size: 40,
+                  ),
                 ),
               ),
             ),
@@ -467,25 +535,37 @@ class _SwipeCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                        child: Text(place.name,
-                            style: AppTextStyles.headingM)),
-                    const Icon(Icons.star_rounded,
-                        color: Colors.amber, size: 18),
+                      child: Text(place.name, style: AppTextStyles.headingM),
+                    ),
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Colors.amber,
+                      size: 18,
+                    ),
                     const SizedBox(width: 4),
-                    Text(place.rating.toStringAsFixed(1),
-                        style: AppTextStyles.bodyM
-                            .copyWith(fontWeight: FontWeight.w600)),
+                    Text(
+                      place.rating.toStringAsFixed(1),
+                      style: AppTextStyles.bodyM.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(place.location,
-                    style: AppTextStyles.caption
-                        .copyWith(color: AppColors.textSecondary)),
+                Text(
+                  place.location,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(place.priceRange,
-                    style: AppTextStyles.bodyM.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700)),
+                Text(
+                  place.priceRange,
+                  style: AppTextStyles.bodyM.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
