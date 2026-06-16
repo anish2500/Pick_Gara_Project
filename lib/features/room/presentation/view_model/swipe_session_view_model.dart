@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mero_choice_application/features/room/domain/usecases/get_room_detail_usecase.dart';
 import 'package:mero_choice_application/features/room/presentation/state/swipe_session_state.dart';
+import 'package:mero_choice_application/features/vote/domain/entities/vote_entity.dart';
+
+import 'package:mero_choice_application/features/vote/domain/usecases/cast_vote_usecases.dart';
 
 final swipeSessionViewModelProvider =
     NotifierProvider<SwipeSessionViewModel, SwipeSessionState>(
@@ -29,9 +32,42 @@ class SwipeSessionViewModel extends Notifier<SwipeSessionState> {
     );
   }
 
-  void swipeLike() => _advance(liked: true);
-  void swipeDislike() => _advance(liked: false);
-  void swipeSkip() => _advance(liked: null);
+  Future<void> swipeLike(String roomId) =>
+      _submitVote(roomId: roomId, voteType: VoteType.like, liked: true);
+
+  Future<void> swipeDislike(String roomId) =>
+      _submitVote(roomId: roomId, voteType: VoteType.dislike, liked: false);
+
+  Future<void> swipeSkip(String roomId) =>
+      _submitVote(roomId: roomId, voteType: VoteType.superlike, liked: null);
+
+  Future<void> _submitVote({
+    required String roomId,
+    required VoteType voteType,
+    required bool? liked,
+  }) async {
+    final place = state.currentPlace;
+    if (place == null) return;
+
+    state = state.copyWith(isSubmittingVote: true);
+
+    final result = await ref.read(castVoteUsecaseProvider).call(
+          CastVoteParams(
+            roomId: roomId,
+            placeId: place.placeId,
+            voteType: voteType,
+          ),
+        );
+
+    result.fold(
+      // On failure (including "already voted"), still advance the card
+      (failure) => _advance(liked: liked),
+      (voteStats) {
+        state = state.copyWith(voteStats: voteStats, isSubmittingVote: false);
+        _advance(liked: liked);
+      },
+    );
+  }
 
   void _advance({bool? liked}) {
     final place = state.currentPlace;
@@ -50,6 +86,7 @@ class SwipeSessionViewModel extends Notifier<SwipeSessionState> {
       currentIndex: nextIndex,
       likedPlaceIds: newLiked,
       dislikedPlaceIds: newDisliked,
+      isSubmittingVote: false,
       status: isLast ? SwipeStatus.completed : SwipeStatus.loaded,
     );
   }
