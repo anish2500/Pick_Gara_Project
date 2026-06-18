@@ -4,4 +4,6 @@ abstract interface class IRoomRemoteDataSource {
   Future<RoomApiModel> createRoom(String name, String category);
   Future<RoomApiModel> joinRoom(String pin);
   Future<Map<String, dynamic>> getRoomDetail(String roomId);
+  Future<void> deleteRoom(String roomId);
+  Future<List<RoomApiModel>> getActiveRooms();
 }

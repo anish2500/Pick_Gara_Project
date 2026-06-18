@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mero_choice_application/features/room/domain/usecases/create_room_usecase.dart';
+import 'package:mero_choice_application/features/room/domain/usecases/delete_room_usecase.dart';
 import 'package:mero_choice_application/features/room/domain/usecases/join_room_usecase.dart';
 import 'package:mero_choice_application/features/room/presentation/state/room_state.dart';
 
@@ -39,6 +40,22 @@ class RoomViewModel extends Notifier<RoomState> {
         errorMessage: failure.message,
       ),
       (room) => state = state.copyWith(status: RoomStatus.success, room: room),
+    );
+  }
+
+  Future<void> deleteRoom(String roomId) async {
+    state = state.copyWith(status: RoomStatus.loading);
+
+    final result = await ref
+        .read(deleteRoomUsecaseProvider)
+        .call(DeleteRoomParams(roomId: roomId));
+
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: RoomStatus.error,
+        errorMessage: failure.message,
+      ),
+      (_) => state = state.copyWith(status: RoomStatus.deleted),
     );
   }
 

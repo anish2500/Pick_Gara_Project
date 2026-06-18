@@ -38,6 +38,26 @@ class RoomRemoteDatasource implements IRoomRemoteDataSource {
   @override
   Future<Map<String, dynamic>> getRoomDetail(String roomId) async {
     final response = await _dio.get('${ApiEndpoints.rooms}/$roomId');
-    return response.data as Map<String, dynamic>; 
+    return response.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<void> deleteRoom(String roomId) async {
+    await _dio.delete('${ApiEndpoints.rooms}/$roomId');
+  }
+
+  @override
+  Future<List<RoomApiModel>> getActiveRooms() async {
+    final response = await _dio.get('${ApiEndpoints.rooms}/active');
+    final data = response.data as Map<String, dynamic>;
+
+    // Backend returns { hostedRooms: [...], joinedRooms: [...] }
+    final hosted = (data['hostedRooms'] as List<dynamic>? ?? []);
+    final joined = (data['joinedRooms'] as List<dynamic>? ?? []);
+
+    return [...hosted, ...joined].map((r) {
+      final raw = Map<String, dynamic>.from(r as Map<String, dynamic>);
+      return RoomApiModel.fromJson(raw);
+    }).toList();
   }
 }

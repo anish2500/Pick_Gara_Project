@@ -8,6 +8,7 @@ class RoomEntity extends Equatable {
   final String hostId;
   final List<String> members;
   final String status;
+  final DateTime? createdAt; 
 
   const RoomEntity({
     this.roomId,
@@ -17,6 +18,7 @@ class RoomEntity extends Equatable {
     required this.hostId,
     required this.members,
     required this.status,
+    this.createdAt, 
   });
 
   @override
@@ -28,5 +30,6 @@ class RoomEntity extends Equatable {
     hostId,
     members,
     status,
-  ]; 
+    createdAt, 
+  ];
 }

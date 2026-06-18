@@ -13,6 +13,7 @@ class RoomApiModel {
   final String? hostId;
   final List<String> members;
   final String? status;
+  final String? createdAt; 
 
   RoomApiModel({
     this.roomId,
@@ -22,6 +23,7 @@ class RoomApiModel {
     this.hostId,
     required this.members,
     this.status,
+    this.createdAt, 
   });
 
   factory RoomApiModel.fromJson(Map<String, dynamic> json) =>
@@ -31,13 +33,14 @@ class RoomApiModel {
 
   RoomEntity toEntity() {
     return RoomEntity(
-      roomId: roomId, 
+      roomId: roomId,
       name: name,
       category: category,
       pin: pin ?? '',
       hostId: hostId ?? '',
       members: members,
       status: status ?? 'active',
+      createdAt: createdAt !=null ? DateTime.tryParse(createdAt!) : null, 
     );
   }
 }

@@ -7,4 +7,6 @@ abstract interface class IRoomRepository {
   Future<Either<Failure, RoomEntity>> createRoom(String name, String category);
   Future<Either<Failure, RoomEntity>> joinRoom(String pin);
   Future<Either<Failure, RoomDetailEntity>> getRoomDetail(String roomId);
+  Future<Either<Failure, Unit>> deleteRoom(String roomId);
+  Future<Either<Failure, List<RoomEntity>>> getActiveRooms();
 }

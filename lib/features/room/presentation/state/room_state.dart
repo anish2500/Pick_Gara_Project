@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_entity.dart';
 
-enum RoomStatus { initial, loading, success, error }
+enum RoomStatus { initial, loading, success, error , deleted}
 
 class RoomState extends Equatable {
   final RoomStatus status;

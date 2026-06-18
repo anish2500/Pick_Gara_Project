@@ -1,22 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
+import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
+import 'package:mero_choice_application/features/place/domain/entities/place_entity.dart';
+import 'package:mero_choice_application/features/room/domain/entities/room_detail_entity.dart';
+import 'package:mero_choice_application/features/room/presentation/page/session_room_page.dart';
+import 'package:mero_choice_application/features/room/presentation/page/swiping_room_page.dart';
+import 'package:mero_choice_application/features/room/presentation/state/active_rooms_state.dart';
+import 'package:mero_choice_application/features/room/presentation/view_model/active_rooms_view_model.dart';
+import 'package:mero_choice_application/features/vote/domain/entities/vote_entity.dart';
 import 'package:mero_choice_application/widgets/active_session_card.dart';
 import 'package:mero_choice_application/widgets/match_card.dart';
 import 'package:mero_choice_application/widgets/my_button.dart';
 import 'package:mero_choice_application/widgets/my_secondary_button.dart';
 
-class DashboardPage extends StatefulWidget {
+class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends ConsumerState<DashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(activeRoomsViewModelProvider.notifier).loadActiveRooms(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+    final activeRoomsState = ref.watch(activeRoomsViewModelProvider);
+    final firstName =
+        authState.authEntity?.fullName.split(' ').first ?? 'there';
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg,
       body: SafeArea(
@@ -26,22 +48,30 @@ class _DashboardPageState extends State<DashboardPage> {
             // ── Sticky header ─────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-              child: _buildHeader(),
+              child: _buildHeader(firstName),
             ),
 
             // ── Scrollable content ────────────────────────
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildActionCard(),
-                    const SizedBox(height: AppSpacing.xxl),
-                    _buildActiveVotesSection(),
-                    const SizedBox(height: AppSpacing.xxl),
-                    _buildRecentMatchesSection(),
-                    const SizedBox(height: AppSpacing.x3l),
-                  ],
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () => ref
+                    .read(activeRoomsViewModelProvider.notifier)
+                    .loadActiveRooms(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildActionCard(),
+                      const SizedBox(height: AppSpacing.xxl),
+                      _buildHostRoomsSection(activeRoomsState),
+                      _buildActiveVotesSection(activeRoomsState),
+                      const SizedBox(height: AppSpacing.xxl),
+                      _buildRecentMatchesSection(),
+                      const SizedBox(height: AppSpacing.x3l),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -52,7 +82,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // ── Header ────────────────────────────────────────────────
-  Widget _buildHeader() {
+  Widget _buildHeader(String firstName) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
       child: Row(
@@ -63,7 +93,8 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               Text('Namaste', style: AppTextStyles.headingL),
               const SizedBox(height: 2),
-              Text('Welcome back, Anish', style: AppTextStyles.subGreeting),
+              Text('Welcome back, $firstName',
+                  style: AppTextStyles.subGreeting),
             ],
           ),
           CircleAvatar(
@@ -92,7 +123,7 @@ class _DashboardPageState extends State<DashboardPage> {
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           boxShadow: [
             BoxShadow(
-              color: AppColors.cardShadow.withOpacity(0.15),
+              color: AppColors.cardShadow.withValues(alpha: 0.15),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
@@ -152,40 +183,142 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ── Active Votes ──────────────────────────────────────────
-  Widget _buildActiveVotesSection() {
+  // ── Your Rooms (host rooms only) ─────────────────────────
+  Widget _buildHostRoomsSection(ActiveRoomsState state) {
+    if (state.status == ActiveRoomsStatus.loading ||
+        state.hostRooms.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Active Votes', 2),
+        _buildSectionHeader('Your Rooms', state.hostRooms.length),
         const SizedBox(height: AppSpacing.md),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-          child: ActiveSessionCard(
-            sessionName: 'Friday Movie Night',
-            startedTime: 'Started 10 min ago',
-            memberCount: 5,
-            totalMembers: 7,
-            voteItems: const [
-              VoteItem(
-                rank: 1,
-                name: 'Dune: Part Two',
-                voteCount: 3,
-                totalVotes: 5,
+        ...state.hostRooms.map(
+          (detail) => Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenH,
+              0,
+              AppSpacing.screenH,
+              AppSpacing.md,
+            ),
+            child: ActiveSessionCard(
+              sessionName: detail.room.name,
+              startedTime: _formatTime(detail.room.createdAt),
+              memberCount: detail.memberCount,
+              totalMembers: detail.memberCount,
+              voteItems: _buildVoteItems(detail),
+              progress: detail.memberCount > 0
+                  ? ((detail.voteStats?.membersVoted ?? 0) /
+                          detail.memberCount)
+                      .clamp(0.0, 1.0)
+                  : 0.0,
+              avatarAssets: const [],
+              buttonText: 'Open',
+              onSwipe: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SessionRoomPage(room: detail.room),
+                ),
               ),
-              VoteItem(rank: 2, name: 'Michael', voteCount: 2, totalVotes: 5),
-            ],
-            progress: 0.6,
-            avatarAssets: const [
-              'assets/images/male1.png',
-              'assets/images/male2.png',
-              'assets/images/male3.png',
-            ],
-            onSwipe: () {},
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+      ],
+    );
+  }
+
+  // ── Active Votes (member rooms only) ──────────────────────
+  Widget _buildActiveVotesSection(ActiveRoomsState state) {
+    if (state.status == ActiveRoomsStatus.loading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader('Active Votes', 0),
+            const SizedBox(height: AppSpacing.md),
+            const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.memberRooms.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Active Votes', state.memberRooms.length),
+        const SizedBox(height: AppSpacing.md),
+        ...state.memberRooms.map(
+          (detail) => Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenH,
+              0,
+              AppSpacing.screenH,
+              AppSpacing.md,
+            ),
+            child: ActiveSessionCard(
+              sessionName: detail.room.name,
+              startedTime: _formatTime(detail.room.createdAt),
+              memberCount: detail.voteStats?.membersVoted ?? 0,
+              totalMembers: detail.memberCount,
+              voteItems: _buildVoteItems(detail),
+              progress: detail.memberCount > 0
+                  ? ((detail.voteStats?.membersVoted ?? 0) /
+                          detail.memberCount)
+                      .clamp(0.0, 1.0)
+                  : 0.0,
+              avatarAssets: const [],
+              onSwipe: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SwipingRoomPage(room: detail.room),
+                ),
+              ),
+            ),
           ),
         ),
       ],
     );
+  }
+
+  // ── Map placeTallies + places → VoteItem list ─────────────
+  List<VoteItem> _buildVoteItems(RoomDetailEntity detail) {
+    final tallies = List<PlaceTallyEntity>.from(
+      detail.voteStats?.placeTallies ?? [],
+    )..sort((a, b) => b.likes.compareTo(a.likes));
+
+    return tallies.take(2).toList().asMap().entries.map((entry) {
+      final tally = entry.value;
+      final place = detail.places.cast<PlaceEntity?>().firstWhere(
+            (p) => p?.placeId == tally.placeId,
+            orElse: () => null,
+          );
+      return VoteItem(
+        rank: entry.key + 1,
+        name: place?.name ?? 'Unknown',
+        voteCount: tally.likes,
+        totalVotes: detail.memberCount,
+      );
+    }).toList();
+  }
+
+  // ── Format createdAt → "Started X min ago" ────────────────
+  String _formatTime(DateTime? time) {
+    if (time == null) return 'Recently started';
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'Just started';
+    if (diff.inMinutes < 60) return 'Started ${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return 'Started ${diff.inHours}h ago';
+    return 'Started ${diff.inDays}d ago';
   }
 
   // ── Recent Matches ────────────────────────────────────────
