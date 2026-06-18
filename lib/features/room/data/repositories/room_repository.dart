@@ -120,4 +120,44 @@ class RoomRepository implements IRoomRepository {
       return Left(ApiFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> deleteRoom(String roomId) async {
+    try {
+      await _remoteDatasource.deleteRoom(roomId);
+      return const Right(unit);
+    } on DioException catch (e) {
+      return Left(
+        ApiFailure(
+          message:
+              (e.response?.data is Map ? e.response?.data['message'] : null) ??
+              e.message ??
+              'Failed to delete room',
+          statusCode: e.response?.statusCode,
+        ),
+      );
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<RoomEntity>>> getActiveRooms() async {
+    try {
+      final models = await _remoteDatasource.getActiveRooms();
+      return Right(models.map((m) => m.toEntity()).toList());
+    } on DioException catch (e) {
+      return Left(
+        ApiFailure(
+          message:
+              (e.response?.data is Map ? e.response?.data['message'] : null) ??
+              e.message ??
+              'Failed to load rooms',
+          statusCode: e.response?.statusCode,
+        ),
+      );
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
 }

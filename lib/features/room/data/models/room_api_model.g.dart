@@ -14,6 +14,7 @@ RoomApiModel _$RoomApiModelFromJson(Map<String, dynamic> json) => RoomApiModel(
   hostId: json['hostId'] as String?,
   members: (json['members'] as List<dynamic>).map((e) => e as String).toList(),
   status: json['status'] as String?,
+  createdAt: json['createdAt'] as String?,
 );
 
 Map<String, dynamic> _$RoomApiModelToJson(RoomApiModel instance) =>
@@ -25,4 +26,5 @@ Map<String, dynamic> _$RoomApiModelToJson(RoomApiModel instance) =>
       'hostId': instance.hostId,
       'members': instance.members,
       'status': instance.status,
+      'createdAt': instance.createdAt,
     };
