@@ -1,27 +1,41 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mero_choice_application/core/services/storage/user_session_service.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/auth/presentation/state/auth_state.dart';
 import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
 
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.read(userSessionServiceProvider);
-    final email = session.getUserEmail() ?? 'user@example.com';
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (ref.read(authViewModelProvider).authEntity == null) {
+        ref.read(authViewModelProvider.notifier).getCurrentUser();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entity = ref.watch(authViewModelProvider).authEntity;
 
     ref.listen<AuthState>(authViewModelProvider, (_, current) {
       if (current.status == AuthStatus.unauthenticated) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/login',
-          (route) => false,
-        );
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       }
     });
 
@@ -54,35 +68,69 @@ class ProfilePage extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      const CircleAvatar(
-                        radius: 46,
-                        backgroundImage:
-                            AssetImage('assets/images/avatar.png'),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
+                  GestureDetector(
+                    onTap: _isUploading ? null : _pickImage,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CircleAvatar(
+                          key: ValueKey(entity?.profileImage),
+                          radius: 46,
+                          backgroundColor: AppColors.primaryBg,
+                          backgroundImage: entity?.profileImage != null
+                              ? CachedNetworkImageProvider(
+                                  entity!.profileImage!,
+                                )
+                              : const AssetImage('assets/images/avatar.png')
+                                    as ImageProvider,
+                        ),
+                        if (_isUploading)
+                          Positioned.fill(
+                            child: ClipOval(
+                              child: Container(
+                                color: Colors.black38,
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.add,
-                            size: 16,
-                            color: AppColors.white,
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              size: 16,
+                              color: AppColors.white,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Text(email, style: AppTextStyles.bodyM),
+                  Text(entity?.fullName ?? '', style: AppTextStyles.titleL),
+                  const SizedBox(height: 4),
+                  Text(
+                    entity?.email ?? '',
+                    style: AppTextStyles.bodyM.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -133,6 +181,122 @@ class ProfilePage extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+
+    // On web the browser only opens a file picker from a synchronous user
+    // gesture. Awaiting a bottom sheet first consumes that gesture, so the
+    // subsequent pickImage call gets silently blocked. Skip the sheet on web
+    // and go straight to the file picker.
+    if (kIsWeb) {
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 600,
+      );
+      if (picked == null || !mounted) return;
+      setState(() => _isUploading = true);
+      await ref.read(authViewModelProvider.notifier).uploadAvatar(picked);
+      await ref.read(authViewModelProvider.notifier).getCurrentUser();
+      if (mounted) setState(() => _isUploading = false);
+      return;
+    }
+
+    // Mobile: show bottom sheet, then pick from the chosen source.
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenH,
+          AppSpacing.xl,
+          AppSpacing.screenH,
+          AppSpacing.x3l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.progressBg,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Text('Change Profile Photo', style: AppTextStyles.headingM),
+            const SizedBox(height: AppSpacing.x3l),
+            ListTile(
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryBg,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.photo_library_rounded,
+                  color: AppColors.primary,
+                ),
+              ),
+              title: Text(
+                'Choose from Gallery',
+                style: AppTextStyles.bodyM.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ListTile(
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryBg,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: AppColors.primary,
+                ),
+              ),
+              title: Text(
+                'Take a Photo',
+                style: AppTextStyles.bodyM.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+
+    final picked = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+      maxWidth: 600,
+    );
+
+    if (picked == null || !mounted) return;
+
+    setState(() => _isUploading = true);
+    await ref.read(authViewModelProvider.notifier).uploadAvatar(picked);
+    await ref.read(authViewModelProvider.notifier).getCurrentUser();
+    if (mounted) setState(() => _isUploading = false);
+  }
 }
 
 class _LogoutDialog extends StatelessWidget {
@@ -144,9 +308,7 @@ class _LogoutDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: AppColors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
         child: Column(
@@ -166,10 +328,7 @@ class _LogoutDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Are you sure?',
-              style: AppTextStyles.headingM,
-            ),
+            const Text('Are you sure?', style: AppTextStyles.headingM),
             const SizedBox(height: 8),
             Text(
               'You agree to logging\nout of session.',
@@ -258,7 +417,7 @@ class _MenuItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           boxShadow: [
             BoxShadow(
-              color: AppColors.cardShadow.withOpacity(0.08),
+              color: AppColors.cardShadow.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -281,9 +440,7 @@ class _MenuItem extends StatelessWidget {
             ),
             Icon(
               trailingIcon ?? Icons.chevron_right_rounded,
-              color: isDestructive
-                  ? AppColors.error
-                  : AppColors.textSecondary,
+              color: isDestructive ? AppColors.error : AppColors.textSecondary,
             ),
           ],
         ),

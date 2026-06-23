@@ -11,12 +11,14 @@ class AuthApiModel {
   final String fullName;
   final String email;
   final String? password;
+  final String? profileImage;
 
   AuthApiModel({
     this.authId,
     required this.fullName,
     required this.email,
     this.password,
+    this.profileImage, 
   });
 
   factory AuthApiModel.fromJson(Map<String, dynamic> json) =>
@@ -25,7 +27,7 @@ class AuthApiModel {
   Map<String, dynamic> toJson() => _$AuthApiModelToJson(this);
 
   AuthEntity toEntity() {
-    return AuthEntity(authId: authId, fullName: fullName, email: email);
+    return AuthEntity(authId: authId, fullName: fullName, email: email, profileImage: profileImage);
   }
 
   factory AuthApiModel.fromEntity(AuthEntity entity) {
@@ -34,6 +36,6 @@ class AuthApiModel {
       fullName: entity.fullName,
       email: entity.email,
       password: entity.password,
-    ); 
+    );
   }
 }

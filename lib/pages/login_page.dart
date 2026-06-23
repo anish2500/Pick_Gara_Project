@@ -35,7 +35,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ref.listen<AuthState>(authViewModelProvider, (_, current) {
       if (current.status == AuthStatus.authenticated) {
         AppSnackBar.showSuccess(context, 'Login Successful!');
-        ref.read(authViewModelProvider.notifier).resetState();
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else if (current.status == AuthStatus.error) {
         AppSnackBar.showError(context, current.errorMessage ?? 'Login failed');

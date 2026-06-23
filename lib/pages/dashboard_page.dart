@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mero_choice_application/core/theme/app_colors.dart';
@@ -48,7 +49,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             // ── Sticky header ─────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-              child: _buildHeader(firstName),
+              child: _buildHeader(firstName, authState.authEntity?.profileImage),
             ),
 
             // ── Scrollable content ────────────────────────
@@ -82,7 +83,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   // ── Header ────────────────────────────────────────────────
-  Widget _buildHeader(String firstName) {
+  Widget _buildHeader(String firstName, String? profileImage) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
       child: Row(
@@ -100,7 +101,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           CircleAvatar(
             radius: 26,
             backgroundColor: AppColors.primaryBg,
-            backgroundImage: const AssetImage('assets/images/avatar.png'),
+            backgroundImage: profileImage != null
+                ? CachedNetworkImageProvider(profileImage)
+                : const AssetImage('assets/images/avatar.png')
+                    as ImageProvider,
           ),
         ],
       ),
@@ -185,8 +189,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   // ── Your Rooms (host rooms only) ─────────────────────────
   Widget _buildHostRoomsSection(ActiveRoomsState state) {
-    if (state.status == ActiveRoomsStatus.loading ||
-        state.hostRooms.isEmpty) {
+    if (state.hostRooms.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -232,23 +235,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   // ── Active Votes (member rooms only) ──────────────────────
   Widget _buildActiveVotesSection(ActiveRoomsState state) {
-    if (state.status == ActiveRoomsStatus.loading) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('Active Votes', 0),
-            const SizedBox(height: AppSpacing.md),
-            const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          ],
-        ),
-      );
-    }
-
     if (state.memberRooms.isEmpty) {
+      if (state.status == ActiveRoomsStatus.loading) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader('Active Votes', 0),
+              const SizedBox(height: AppSpacing.md),
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            ],
+          ),
+        );
+      }
       return const SizedBox.shrink();
     }
 

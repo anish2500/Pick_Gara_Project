@@ -69,4 +69,6 @@ class ActiveRoomsViewModel extends Notifier<ActiveRoomsState> {
       memberRooms: memberDetails,
     );
   }
+
+  void reset() => state = ActiveRoomsState.initial();
 }

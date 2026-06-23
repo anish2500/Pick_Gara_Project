@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mero_choice_application/core/error/failures.dart';
 import 'package:mero_choice_application/core/services/storage/token_service.dart';
 import 'package:mero_choice_application/core/services/storage/user_session_service.dart';
@@ -39,6 +40,7 @@ class AuthRepository implements IAuthRepository {
         authId: _userSessionService.getUserId(),
         fullName: _userSessionService.getFullName() ?? '',
         email: _userSessionService.getUserEmail() ?? '',
+        profileImage: _userSessionService.getProfileImage(),
       );
       return Right(entity);
     } catch (e) {
@@ -93,6 +95,26 @@ class AuthRepository implements IAuthRepository {
               (e.response?.data is Map ? e.response?.data['message'] : null) ??
               e.message ??
               'Registration failed',
+        ),
+      );
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadAvatar(XFile xFile) async {
+    try {
+      final url = await _remoteDatasource.uploadAvatar(xFile);
+      return Right(url);
+    } on DioException catch (e) {
+      return Left(
+        ApiFailure(
+          message:
+              (e.response?.data is Map ? e.response?.data['message'] : null) ??
+              e.message ??
+              'Upload failed',
+          statusCode: e.response?.statusCode,
         ),
       );
     } catch (e) {
