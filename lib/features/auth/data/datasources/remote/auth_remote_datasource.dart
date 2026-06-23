@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mero_choice_application/core/api/api_client.dart';
 import 'package:mero_choice_application/core/api/api_endpoints.dart';
 import 'package:mero_choice_application/core/services/storage/token_service.dart';
@@ -43,6 +45,7 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
       userId: model.authId ?? '',
       email: model.email,
       fullName: model.fullName,
+      profileImage: model.profileImage,
     );
 
     return model;
@@ -62,5 +65,22 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
     final userData = response.data['user'] as Map<String, dynamic>;
 
     return AuthApiModel.fromJson(userData);
+  }
+  
+  @override
+  Future<String> uploadAvatar(XFile xFile) async {
+    final MultipartFile multipartFile;
+    if (kIsWeb) {
+      final bytes = await xFile.readAsBytes();
+      final filename = xFile.name.isNotEmpty ? xFile.name : 'avatar.jpg';
+      multipartFile = MultipartFile.fromBytes(bytes, filename: filename);
+    } else {
+      multipartFile = await MultipartFile.fromFile(xFile.path);
+    }
+    final formData = FormData.fromMap({'avatar': multipartFile});
+    final response = await _dio.post('/auth/upload-avatar', data: formData);
+    final url = response.data['profileImage'] as String;
+    await _userSessionService.saveProfileImage(url);
+    return url;
   }
 }
