@@ -64,7 +64,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildActionCard(),
+                      _buildActionCard(activeRoomsState),
                       const SizedBox(height: AppSpacing.xxl),
                       _buildHostRoomsSection(activeRoomsState),
                       _buildActiveVotesSection(activeRoomsState),
@@ -112,7 +112,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   // ── Create Session / Join Room card ───────────────────────
-  Widget _buildActionCard() {
+  Widget _buildActionCard(ActiveRoomsState activeRoomsState) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
       child: Container(
@@ -139,6 +139,39 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               text: 'CREATE SESSION',
               leadingIcon: Icons.add_circle_outline_rounded,
               onTap: () {
+                if (activeRoomsState.hostRooms.isNotEmpty) {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      backgroundColor: AppColors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      title: Text(
+                        'Active Room Exists',
+                        style: AppTextStyles.headingM,
+                      ),
+                      content: Text(
+                        'Delete your current room before creating a new session.',
+                        style: AppTextStyles.bodyM.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            'OK',
+                            style: AppTextStyles.buttonM.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                  return;
+                }
                 Navigator.pushNamed(context, '/create-room');
               },
             ),
@@ -193,12 +226,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       return const SizedBox.shrink();
     }
 
+    final displayRooms = state.hostRooms.take(1).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Your Rooms', state.hostRooms.length),
+        _buildSectionHeader('Your Rooms', displayRooms.length),
         const SizedBox(height: AppSpacing.md),
-        ...state.hostRooms.map(
+        ...displayRooms.map(
           (detail) => Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.screenH,
@@ -254,12 +289,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       return const SizedBox.shrink();
     }
 
+    final displayMemberRooms = state.memberRooms.take(2).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Active Votes', state.memberRooms.length),
+        _buildSectionHeader('Active Votes', displayMemberRooms.length),
         const SizedBox(height: AppSpacing.md),
-        ...state.memberRooms.map(
+        ...displayMemberRooms.map(
           (detail) => Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.screenH,
