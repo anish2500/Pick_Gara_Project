@@ -1,25 +1,23 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
+import 'package:mero_choice_application/features/bookmark/presentation/view_model/bookmark_view_model.dart';
 import 'package:mero_choice_application/features/place/domain/entities/place_entity.dart';
+import 'package:mero_choice_application/widgets/app_snackbar.dart';
 
-class PlaceDetailPage extends StatefulWidget {
+class PlaceDetailPage extends ConsumerWidget {
   final PlaceEntity place;
 
   const PlaceDetailPage({super.key, required this.place});
 
   @override
-  State<PlaceDetailPage> createState() => _PlaceDetailPageState();
-}
-
-class _PlaceDetailPageState extends State<PlaceDetailPage> {
-  bool _isBookmarked = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final place = widget.place;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isBookmarked = ref.watch(
+      bookmarkViewModelProvider.select((s) => s.isBookmarked(place.placeId)),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -73,9 +71,9 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                         child: CachedNetworkImage(
                           imageUrl: place.image,
                           fit: BoxFit.cover,
-                          placeholder: (_, _) =>
+                          placeholder: (ctx, url) =>
                               Container(color: AppColors.primaryBg),
-                          errorWidget: (_, _, _) => Container(
+                          errorWidget: (ctx, url, err) => Container(
                             color: AppColors.primaryBg,
                             child: const Icon(
                               Icons.image_not_supported_outlined,
@@ -156,7 +154,19 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                 0,
               ),
               child: GestureDetector(
-                onTap: () => setState(() => _isBookmarked = !_isBookmarked),
+                onTap: () async {
+                  final added = await ref
+                      .read(bookmarkViewModelProvider.notifier)
+                      .toggle(place.placeId);
+                  if (!context.mounted) return;
+                  if (added == null) {
+                    AppSnackBar.showError(context, 'Failed to update bookmark');
+                  } else if (added) {
+                    AppSnackBar.showSuccess(context, 'Added to Bookmarks');
+                  } else {
+                    AppSnackBar.showSuccess(context, 'Removed from Bookmarks');
+                  }
+                },
                 child: Row(
                   children: [
                     Container(
@@ -164,27 +174,27 @@ class _PlaceDetailPageState extends State<PlaceDetailPage> {
                       height: 32,
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: _isBookmarked
+                          color: isBookmarked
                               ? AppColors.primary
                               : AppColors.textSecondary,
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
-                        _isBookmarked
+                        isBookmarked
                             ? Icons.bookmark_rounded
                             : Icons.bookmark_border_rounded,
                         size: 18,
-                        color: _isBookmarked
+                        color: isBookmarked
                             ? AppColors.primary
                             : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Text(
-                      _isBookmarked ? 'Saved' : 'Save to Bookmarks',
+                      isBookmarked ? 'Saved' : 'Save to Bookmarks',
                       style: AppTextStyles.bodyM.copyWith(
-                        color: _isBookmarked
+                        color: isBookmarked
                             ? AppColors.primary
                             : AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
