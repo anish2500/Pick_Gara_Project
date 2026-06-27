@@ -28,4 +28,7 @@ class ApiEndpoints {
   static const String places = '/places';
 
   static String voteForRoom(String roomId) => '/rooms/$roomId/vote';
+
+  static const String bookmarks = '/bookmarks';
+  static String toggleBookmark(String placeId) => '/bookmarks/$placeId';
 }

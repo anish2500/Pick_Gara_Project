@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
+import 'package:mero_choice_application/features/bookmark/presentation/view_model/bookmark_view_model.dart';
 import 'package:mero_choice_application/features/place/domain/entities/place_entity.dart';
 import 'package:mero_choice_application/features/place/presentation/page/place_detail_page.dart';
 import 'package:mero_choice_application/features/place/presentation/state/explore_state.dart';
 import 'package:mero_choice_application/features/place/presentation/view_model/explore_view_model.dart';
+import 'package:mero_choice_application/widgets/app_snackbar.dart';
 
 class ExplorePage extends ConsumerStatefulWidget {
   const ExplorePage({super.key});
@@ -22,9 +24,10 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(exploreViewModelProvider.notifier).loadPlaces(),
-    );
+    Future.microtask(() {
+      ref.read(exploreViewModelProvider.notifier).loadPlaces();
+      ref.read(bookmarkViewModelProvider.notifier).loadBookmarks();
+    });
   }
 
   @override
@@ -116,7 +119,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
         itemCount: state.categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (_, i) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) {
           final cat = state.categories[i];
           final selected = cat == state.selectedCategory;
@@ -331,14 +334,17 @@ class _CategoryChip extends StatelessWidget {
 }
 
 // ── Place card widget ─────────────────────────────────────────
-class _PlaceCard extends StatelessWidget {
+class _PlaceCard extends ConsumerWidget {
   final PlaceEntity place;
   final VoidCallback onTap;
 
   const _PlaceCard({required this.place, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isBookmarked = ref.watch(
+      bookmarkViewModelProvider.select((s) => s.isBookmarked(place.placeId)),
+    );
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -370,7 +376,7 @@ class _PlaceCard extends StatelessWidget {
                   CachedNetworkImage(
                     imageUrl: place.image,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(
+                    placeholder: (ctx, url) => Container(
                       color: AppColors.primaryBg,
                       child: const Center(
                         child: CircularProgressIndicator(
@@ -379,7 +385,7 @@ class _PlaceCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    errorWidget: (_, __, ___) => Container(
+                    errorWidget: (ctx, url, err) => Container(
                       color: AppColors.primaryBg,
                       child: const Icon(
                         Icons.image_not_supported_outlined,
@@ -425,17 +431,41 @@ class _PlaceCard extends StatelessWidget {
                   Positioned(
                     top: AppSpacing.md,
                     right: AppSpacing.md,
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.bookmark_border_rounded,
-                        color: AppColors.textSecondary,
-                        size: 18,
+                    child: GestureDetector(
+                      onTap: () async {
+                        final added = await ref
+                            .read(bookmarkViewModelProvider.notifier)
+                            .toggle(place.placeId);
+                        if (!context.mounted) return;
+                        if (added == null) {
+                          AppSnackBar.showError(
+                              context, 'Failed to update bookmark');
+                        } else if (added) {
+                          AppSnackBar.showSuccess(
+                              context, 'Added to Bookmarks');
+                        } else {
+                          AppSnackBar.showSuccess(
+                              context, 'Removed from Bookmarks');
+                        }
+                      },
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: isBookmarked
+                              ? AppColors.primary
+                              : AppColors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isBookmarked
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          color: isBookmarked
+                              ? AppColors.white
+                              : AppColors.textSecondary,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ),
