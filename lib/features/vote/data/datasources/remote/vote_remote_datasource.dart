@@ -26,6 +26,7 @@ class VoteRemoteDatasource implements IVoteRemoteDataSource {
     );
 
     final statsJson = response.data['voteStats'] as Map<String, dynamic>;
-    return VoteStatsApiModel.fromJson(statsJson); 
+    final hasSuperVote = response.data['hasSuperVote'] as bool? ?? false; 
+    return VoteStatsApiModel.fromJson({ ...statsJson, 'hasSuperVote': hasSuperVote});
   }
 }

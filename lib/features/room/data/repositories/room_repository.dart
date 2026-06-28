@@ -98,12 +98,16 @@ class RoomRepository implements IRoomRepository {
             ).toEntity()
           : null;
 
+      final superVoteData = data['superVote'] as Map<String, dynamic>?;
+      final hasUsedSuperVote =
+          superVoteData?['hasUsedSuperVote'] as bool? ?? false; 
       return Right(
         RoomDetailEntity(
           room: roomModel.toEntity(),
           places: places,
           memberCount: memberCount,
           voteStats: voteStats,
+          hasSuperVote: hasUsedSuperVote,
         ),
       );
     } on DioException catch (e) {

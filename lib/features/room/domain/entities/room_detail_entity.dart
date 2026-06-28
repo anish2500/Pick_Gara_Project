@@ -8,14 +8,16 @@ class RoomDetailEntity extends Equatable {
   final List<PlaceEntity> places;
   final int memberCount;
   final VoteStatsEntity? voteStats;
+  final bool hasSuperVote;
 
   const RoomDetailEntity({
     required this.room,
     required this.places,
     required this.memberCount,
     this.voteStats,
+    this.hasSuperVote = false,
   });
 
   @override
-  List<Object?> get props => [room, places, memberCount, voteStats];
+  List<Object?> get props => [room, places, memberCount, voteStats, hasSuperVote];
 }

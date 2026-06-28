@@ -35,12 +35,14 @@ class VoteStatsApiModel {
   final int totalMembers;
   final String display;
   final List<PlaceTallyApiModel> placeTallies;
+  final bool hasSuperVote;
 
   const VoteStatsApiModel({
     required this.membersVoted,
     required this.totalMembers,
     required this.display,
     this.placeTallies = const [],
+    this.hasSuperVote = false,
   });
 
   factory VoteStatsApiModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,7 @@ class VoteStatsApiModel {
       placeTallies: (json['placeTallies'] as List<dynamic>? ?? [])
           .map((t) => PlaceTallyApiModel.fromJson(t as Map<String, dynamic>))
           .toList(),
+      hasSuperVote: json['hasSuperVote'] as bool? ?? false,
     );
   }
 
@@ -59,5 +62,6 @@ class VoteStatsApiModel {
         totalMembers: totalMembers,
         display: display,
         placeTallies: placeTallies.map((t) => t.toEntity()).toList(),
+        hasSuperVote: hasSuperVote,
       );
 }
