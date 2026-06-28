@@ -10,6 +10,8 @@ import 'package:mero_choice_application/features/room/presentation/state/swipe_s
 import 'package:mero_choice_application/features/room/presentation/view_model/swipe_session_view_model.dart';
 import 'package:mero_choice_application/widgets/app_snackbar.dart';
 
+const _kSuperVoteColors = Color(0xFF7C3AED);
+
 class SwipingRoomPage extends ConsumerStatefulWidget {
   final RoomEntity room;
 
@@ -20,6 +22,7 @@ class SwipingRoomPage extends ConsumerStatefulWidget {
 }
 
 class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
+  bool _showSuperVoteBanner = false;
   @override
   void initState() {
     super.initState();
@@ -28,6 +31,15 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
           .read(swipeSessionViewModelProvider.notifier)
           .loadRoom(widget.room.roomId!);
     });
+  }
+
+  Future<void> _onSuperVoteTap() async {
+    setState(() => _showSuperVoteBanner = true);
+    ref
+        .read(swipeSessionViewModelProvider.notifier)
+        .superVote(widget.room.roomId!);
+    await Future.delayed(const Duration(milliseconds: 1600));
+    if (mounted) setState(() => _showSuperVoteBanner = false);
   }
 
   @override
@@ -77,7 +89,19 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
         ),
         centerTitle: true,
       ),
-      body: _buildBody(swipeState),
+      body: Stack(
+  children: [
+    _buildBody(swipeState),
+    if (_showSuperVoteBanner)
+      const Positioned(
+        top: 80,
+        left: 24,
+        right: 24,
+        child: _SuperVoteBanner(),
+      ),
+  ],
+),
+
     );
   }
 
@@ -213,28 +237,26 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
             child: _SwipeCardStack(
               places: detail.places,
               currentIndex: swipeState.currentIndex,
+              showSuperVoteGlow: _showSuperVoteBanner,
               onLike: () => ref
                   .read(swipeSessionViewModelProvider.notifier)
                   .swipeLike(widget.room.roomId!),
               onDislike: () => ref
                   .read(swipeSessionViewModelProvider.notifier)
                   .swipeDislike(widget.room.roomId!),
-              onSkip: () => ref
-                  .read(swipeSessionViewModelProvider.notifier)
-                  .swipeSkip(widget.room.roomId!),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
 
           // ── Action buttons ─────────────────────────────────
-          _buildActionButtons(),
+          _buildActionButtons(swipeState.hasSuperVote),
           const SizedBox(height: AppSpacing.x3l),
         ],
       ),
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(bool hasSuperVote) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -258,14 +280,9 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
               .swipeLike(widget.room.roomId!),
         ),
         const SizedBox(width: AppSpacing.xl),
-        _ActionButton(
-          icon: Icons.bolt_rounded,
-          color: AppColors.warning,
-          backgroundColor: AppColors.white,
-          size: 52,
-          onTap: () => ref
-              .read(swipeSessionViewModelProvider.notifier)
-              .swipeSkip(widget.room.roomId!),
+        _SuperVoteButton(
+          isUsed: hasSuperVote,
+          onTap: hasSuperVote ? null : _onSuperVoteTap,
         ),
       ],
     );
@@ -333,16 +350,16 @@ class _SwipingRoomPageState extends ConsumerState<SwipingRoomPage> {
 class _SwipeCardStack extends StatefulWidget {
   final List<PlaceEntity> places;
   final int currentIndex;
+  final bool showSuperVoteGlow;
   final VoidCallback onLike;
   final VoidCallback onDislike;
-  final VoidCallback onSkip;
 
   const _SwipeCardStack({
     required this.places,
     required this.currentIndex,
+    required this.showSuperVoteGlow,
     required this.onLike,
     required this.onDislike,
-    required this.onSkip,
   });
 
   @override
@@ -427,7 +444,10 @@ class _SwipeCardStackState extends State<_SwipeCardStack> {
                 angle: _offsetX / 900,
                 child: Stack(
                   children: [
-                    _SwipeCard(place: places[idx]),
+                    _SwipeCard(
+                      place: places[idx],
+                      showSuperVoteGlow: widget.showSuperVoteGlow,
+                    ),
                     if (showLike)
                       Positioned(
                         top: 24,
@@ -487,16 +507,31 @@ class _OverlayLabel extends StatelessWidget {
 
 class _SwipeCard extends StatelessWidget {
   final PlaceEntity place;
-  const _SwipeCard({required this.place});
+  final bool showSuperVoteGlow;
+
+  const _SwipeCard({
+    required this.place,
+    this.showSuperVoteGlow = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: showSuperVoteGlow
+            ? Border.all(color: _kSuperVoteColors, width: 3)
+            : null,
         boxShadow: [
+          if (showSuperVoteGlow)
+            BoxShadow(
+              color: _kSuperVoteColors.withValues(alpha: 0.5),
+              blurRadius: 24,
+              spreadRadius: 4,
+            ),
           BoxShadow(
             color: AppColors.cardShadow.withValues(alpha: 0.15),
             blurRadius: 16,
@@ -609,6 +644,97 @@ class _ActionButton extends StatelessWidget {
           ],
         ),
         child: Icon(icon, color: color, size: size * 0.42),
+      ),
+    );
+  }
+}
+
+class _SuperVoteButton extends StatelessWidget {
+  final bool isUsed;
+  final VoidCallback? onTap;
+
+  const _SuperVoteButton({required this.isUsed, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: isUsed ? AppColors.progressBg : _kSuperVoteColors,
+              shape: BoxShape.circle,
+              boxShadow: isUsed
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: _kSuperVoteColors.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+            ),
+            child: Icon(
+              Icons.bolt_rounded,
+              color: isUsed ? AppColors.textSecondary : AppColors.white,
+              size: 26,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          isUsed ? '0/1 left' : 'Super',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: isUsed ? AppColors.textSecondary : _kSuperVoteColors,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SuperVoteBanner extends StatelessWidget {
+  const _SuperVoteBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: _kSuperVoteColors,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _kSuperVoteColors.withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.bolt_rounded, color: Colors.white, size: 20),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Super Vote Cast! Card pushed to your group.',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

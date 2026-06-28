@@ -28,6 +28,7 @@ class SwipeSessionViewModel extends Notifier<SwipeSessionState> {
         status: SwipeStatus.loaded,
         detail: detail,
         currentIndex: 0,
+        hasSuperVote: detail.hasSuperVote, 
       ),
     );
   }
@@ -38,8 +39,8 @@ class SwipeSessionViewModel extends Notifier<SwipeSessionState> {
   Future<void> swipeDislike(String roomId) =>
       _submitVote(roomId: roomId, voteType: VoteType.dislike, liked: false);
 
-  Future<void> swipeSkip(String roomId) =>
-      _submitVote(roomId: roomId, voteType: VoteType.superlike, liked: null);
+  Future<void> superVote(String roomId) =>
+      _submitVote(roomId: roomId, voteType: VoteType.superlike, liked: true);
 
   Future<void> _submitVote({
     required String roomId,
@@ -63,7 +64,7 @@ class SwipeSessionViewModel extends Notifier<SwipeSessionState> {
       // On failure (including "already voted"), still advance the card
       (failure) => _advance(liked: liked),
       (voteStats) {
-        state = state.copyWith(voteStats: voteStats, isSubmittingVote: false);
+        state = state.copyWith(voteStats: voteStats, isSubmittingVote: false, hasSuperVote: voteStats.hasSuperVote);
         _advance(liked: liked);
       },
     );

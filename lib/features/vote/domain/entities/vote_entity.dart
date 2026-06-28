@@ -24,14 +24,16 @@ class VoteStatsEntity extends Equatable {
   final int totalMembers;
   final String display;
   final List<PlaceTallyEntity> placeTallies;
+  final bool hasSuperVote;
 
   const VoteStatsEntity({
     required this.membersVoted,
     required this.totalMembers,
     required this.display,
     this.placeTallies = const [],
+    this.hasSuperVote = false,
   });
 
   @override
-  List<Object?> get props => [membersVoted, totalMembers, display, placeTallies];
+  List<Object?> get props => [membersVoted, totalMembers, display, placeTallies, hasSuperVote];
 }

@@ -9,11 +9,12 @@ class SwipeSessionState extends Equatable {
   final SwipeStatus status;
   final RoomDetailEntity? detail;
   final VoteStatsEntity? voteStats;
-  final bool isSubmittingVote; 
+  final bool isSubmittingVote;
   final int currentIndex;
   final List<String> likedPlaceIds;
   final List<String> dislikedPlaceIds;
   final String? errorMessage;
+  final bool hasSuperVote; 
 
   const SwipeSessionState({
     required this.status,
@@ -24,6 +25,7 @@ class SwipeSessionState extends Equatable {
     this.likedPlaceIds = const [],
     this.dislikedPlaceIds = const [],
     this.errorMessage,
+    this.hasSuperVote = false, 
   });
 
   factory SwipeSessionState.initial() =>
@@ -43,6 +45,7 @@ class SwipeSessionState extends Equatable {
     List<String>? likedPlaceIds,
     List<String>? dislikedPlaceIds,
     String? errorMessage,
+    bool? hasSuperVote, 
   }) {
     return SwipeSessionState(
       status: status ?? this.status,
@@ -53,6 +56,7 @@ class SwipeSessionState extends Equatable {
       likedPlaceIds: likedPlaceIds ?? this.likedPlaceIds,
       dislikedPlaceIds: dislikedPlaceIds ?? this.dislikedPlaceIds,
       errorMessage: errorMessage ?? this.errorMessage,
+      hasSuperVote: hasSuperVote ?? this.hasSuperVote
     );
   }
 
@@ -66,5 +70,6 @@ class SwipeSessionState extends Equatable {
     likedPlaceIds,
     dislikedPlaceIds,
     errorMessage,
+    hasSuperVote
   ];
 }
