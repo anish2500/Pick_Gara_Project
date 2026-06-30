@@ -31,4 +31,7 @@ class ApiEndpoints {
 
   static const String bookmarks = '/bookmarks';
   static String toggleBookmark(String placeId) => '/bookmarks/$placeId';
+
+  static const String completedRooms = '/rooms/completed'; 
+  static String completeRoom(String roomId) => '/rooms/$roomId/complete'; 
 }

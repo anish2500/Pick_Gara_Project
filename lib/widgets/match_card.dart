@@ -1,17 +1,20 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 
 class MatchCard extends StatelessWidget {
-  final String imageAsset;
+  final String? imageAsset;
+  final String? imageUrl; 
   final String name;
   final String location;
   final VoidCallback? onTap;
 
   const MatchCard({
     super.key,
-    required this.imageAsset,
+    this.imageAsset,
+    this.imageUrl, 
     required this.name,
     required this.location,
     this.onTap,
@@ -28,7 +31,7 @@ class MatchCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           boxShadow: [
             BoxShadow(
-              color: AppColors.cardShadow.withOpacity(0.2),
+              color: AppColors.cardShadow.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -42,12 +45,33 @@ class MatchCard extends StatelessWidget {
                 topLeft: Radius.circular(AppSpacing.radiusMd),
                 topRight: Radius.circular(AppSpacing.radiusMd),
               ),
-              child: Image.asset(
-                imageAsset,
-                width: 150,
-                height: 112,
-                fit: BoxFit.cover,
-              ),
+              child: imageUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl!,
+                      width: 150,
+                      height: 112,
+                      fit: BoxFit.cover,
+                      placeholder: (ctx, url) => Container(
+                        width: 150,
+                        height: 112,
+                        color: AppColors.primaryBg,
+                      ),
+                      errorWidget: (ctx, url, err) => Container(
+                        width: 150,
+                        height: 112,
+                        color: AppColors.primaryBg,
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    )
+                  : Image.asset(
+                      imageAsset ?? '',
+                      width: 150,
+                      height: 112,
+                      fit: BoxFit.cover,
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(

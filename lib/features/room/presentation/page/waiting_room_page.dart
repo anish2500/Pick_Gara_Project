@@ -8,6 +8,7 @@ import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/place/domain/entities/place_entity.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_detail_entity.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_entity.dart';
+import 'package:mero_choice_application/features/match/domain/usecases/complete_room_usecase.dart';
 import 'package:mero_choice_application/features/room/domain/usecases/get_room_detail_usecase.dart';
 import 'package:mero_choice_application/features/room/presentation/page/results_page.dart';
 import 'package:mero_choice_application/features/vote/domain/entities/vote_entity.dart';
@@ -87,6 +88,8 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
   }
 
   void _navigateToResults(RoomDetailEntity detail) {
+    ref.read(completeRoomUsecaseProvider).call(widget.room.roomId!);
+
     final tallies = List<PlaceTallyEntity>.from(
       detail.voteStats?.placeTallies ?? [],
     );
