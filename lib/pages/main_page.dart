@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mero_choice_application/features/match/presentation/page/matches_page.dart';
 import 'package:mero_choice_application/features/place/presentation/page/explore_page.dart';
 import 'package:mero_choice_application/pages/dashboard_page.dart';
 import 'package:mero_choice_application/pages/profile_page.dart';
@@ -17,7 +18,7 @@ class _MainPageState extends State<MainPage> {
   static const List<Widget> _pages = [
     DashboardPage(),
     ExplorePage(),
-    SizedBox.shrink(),
+    MatchesPage(), 
     ProfilePage(),
   ];
 

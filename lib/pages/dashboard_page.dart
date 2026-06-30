@@ -5,6 +5,7 @@ import 'package:mero_choice_application/core/theme/app_colors.dart';
 import 'package:mero_choice_application/core/theme/app_spacing.dart';
 import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
+import 'package:mero_choice_application/features/match/presentation/view_model/match_view_model.dart';
 import 'package:mero_choice_application/features/place/domain/entities/place_entity.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_detail_entity.dart';
 import 'package:mero_choice_application/features/room/presentation/page/session_room_page.dart';
@@ -28,9 +29,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(activeRoomsViewModelProvider.notifier).loadActiveRooms(),
-    );
+    Future.microtask(() {
+      ref.read(activeRoomsViewModelProvider.notifier).loadActiveRooms();
+      ref.read(matchViewModelProvider.notifier).loadMatches(); 
+    });
   }
 
   @override
@@ -49,7 +51,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             // ── Sticky header ─────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-              child: _buildHeader(firstName, authState.authEntity?.profileImage),
+              child: _buildHeader(
+                firstName,
+                authState.authEntity?.profileImage,
+              ),
             ),
 
             // ── Scrollable content ────────────────────────
@@ -94,8 +99,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             children: [
               Text('Namaste', style: AppTextStyles.headingL),
               const SizedBox(height: 2),
-              Text('Welcome back, $firstName',
-                  style: AppTextStyles.subGreeting),
+              Text(
+                'Welcome back, $firstName',
+                style: AppTextStyles.subGreeting,
+              ),
             ],
           ),
           CircleAvatar(
@@ -103,8 +110,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             backgroundColor: AppColors.primaryBg,
             backgroundImage: profileImage != null
                 ? CachedNetworkImageProvider(profileImage)
-                : const AssetImage('assets/images/avatar.png')
-                    as ImageProvider,
+                : const AssetImage('assets/images/avatar.png') as ImageProvider,
           ),
         ],
       ),
@@ -248,9 +254,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               totalMembers: detail.memberCount,
               voteItems: _buildVoteItems(detail),
               progress: detail.memberCount > 0
-                  ? ((detail.voteStats?.membersVoted ?? 0) /
-                          detail.memberCount)
-                      .clamp(0.0, 1.0)
+                  ? ((detail.voteStats?.membersVoted ?? 0) / detail.memberCount)
+                        .clamp(0.0, 1.0)
                   : 0.0,
               avatarAssets: const [],
               buttonText: 'Open',
@@ -311,9 +316,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               totalMembers: detail.memberCount,
               voteItems: _buildVoteItems(detail),
               progress: detail.memberCount > 0
-                  ? ((detail.voteStats?.membersVoted ?? 0) /
-                          detail.memberCount)
-                      .clamp(0.0, 1.0)
+                  ? ((detail.voteStats?.membersVoted ?? 0) / detail.memberCount)
+                        .clamp(0.0, 1.0)
                   : 0.0,
               avatarAssets: const [],
               onSwipe: () => Navigator.push(
@@ -338,9 +342,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     return tallies.take(2).toList().asMap().entries.map((entry) {
       final tally = entry.value;
       final place = detail.places.cast<PlaceEntity?>().firstWhere(
-            (p) => p?.placeId == tally.placeId,
-            orElse: () => null,
-          );
+        (p) => p?.placeId == tally.placeId,
+        orElse: () => null,
+      );
       return VoteItem(
         rank: entry.key + 1,
         name: place?.name ?? 'Unknown',
@@ -361,42 +365,34 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   // ── Recent Matches ────────────────────────────────────────
-  Widget _buildRecentMatchesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader('Recent Matches', 2),
-        const SizedBox(height: AppSpacing.md),
-        SizedBox(
-          height: 190,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
-            children: [
-              MatchCard(
-                imageAsset: 'assets/images/cafe.jpg',
-                name: 'Roadhouse Cafe',
-                location: 'Baudha, Kathmandu • 2.3 miles',
-                onTap: () {},
-              ),
-              const SizedBox(width: AppSpacing.md),
-              MatchCard(
-                imageAsset: 'assets/images/pizza.jpg',
-                name: 'Pizza Nation',
-                location: 'Jhamsikhel, Kathmandu • 3.9 miles',
-                onTap: () {},
-              ),
-              const SizedBox(width: AppSpacing.md),
-              MatchCard(
-                imageAsset: 'assets/images/hiking.jpg',
-                name: 'Shivapuri Hiking',
-                location: 'Gokarneshowr, Kathmandu • 4.9 miles',
-                onTap: () {},
-              ),
-            ],
+Widget _buildRecentMatchesSection() {
+  final matchState = ref.watch(matchViewModelProvider);
+  final recent = matchState.matches.take(5).toList();
+
+  if (recent.isEmpty) return const SizedBox.shrink();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildSectionHeader('Recent Matches', recent.length),
+      const SizedBox(height: AppSpacing.md),
+      SizedBox(
+        height: 190,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+          itemCount: recent.length,
+          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+          itemBuilder: (_, i) => MatchCard(
+            imageUrl: recent[i].winner.image,
+            name: recent[i].winner.name,
+            location: recent[i].winner.location,
+            onTap: () {},
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 }
