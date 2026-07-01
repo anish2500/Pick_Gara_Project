@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mero_choice_application/features/bookmark/domain/usecases/get_bookmarked_places_usecase.dart';
 import 'package:mero_choice_application/features/bookmark/domain/usecases/get_bookmarks_usecase.dart';
 import 'package:mero_choice_application/features/bookmark/domain/usecases/toggle_bookmark_usecase.dart';
 import 'package:mero_choice_application/features/bookmark/presentation/state/bookmark_state.dart';
@@ -62,4 +63,19 @@ class BookmarkViewModel extends Notifier<BookmarkState> {
     );
     return outcome;
   }
+
+
+  Future<void> loadBookmarkedPlaces() async {
+  state = state.copyWith(isLoading: true);
+  final result = await ref.read(getBookmarkedPlacesUsecaseProvider).call();
+  result.fold(
+    (_) => state = state.copyWith(isLoading: false),
+    (places) => state = state.copyWith(
+      isLoading: false,
+      bookmarkedPlaces: places,
+      bookmarkedIds: places.map((p) => p.placeId).toSet(),
+    ),
+  );
+}
+
 }
