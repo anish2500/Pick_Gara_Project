@@ -38,6 +38,9 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
   int _membersVoted = 0;
   int _totalMembers = 0;
 
+  List<PlaceEntity> _places = [];
+  List<PlaceTallyEntity> _tallies = [];
+
   @override
   void initState() {
     super.initState();
@@ -66,25 +69,26 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
         .read(getRoomDetailUsecaseProvider)
         .call(GetRoomDetailParams(roomId: widget.room.roomId!));
 
-    result.fold(
-      (_) {},
-      (detail) {
-        if (!mounted) return;
+    result.fold((_) {}, (detail) {
+      if (!mounted) return;
 
-        final voted = detail.voteStats?.membersVoted ?? _membersVoted;
-        final total = detail.memberCount;
+      final voted = detail.voteStats?.membersVoted ?? _membersVoted;
+      final total = detail.memberCount;
 
-        setState(() {
-          _membersVoted = voted;
-          _totalMembers = total;
-        });
+      setState(() {
+        _membersVoted = voted;
+        _totalMembers = total;
+        _places = detail.places;
+        _tallies = List<PlaceTallyEntity>.from(
+          detail.voteStats?.placeTallies ?? [],
+        )..sort((a, b) => b.likes.compareTo(a.likes));
+      });
 
-        if (voted >= total && total > 0) {
-          _pollingTimer?.cancel();
-          _navigateToResults(detail);
-        }
-      },
-    );
+      if (voted >= total && total > 0) {
+        _pollingTimer?.cancel();
+        _navigateToResults(detail);
+      }
+    });
   }
 
   void _navigateToResults(RoomDetailEntity detail) {
@@ -98,9 +102,9 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
     PlaceEntity? winner;
     if (tallies.isNotEmpty) {
       winner = detail.places.cast<PlaceEntity?>().firstWhere(
-            (p) => p?.placeId == tallies.first.placeId,
-            orElse: () => null,
-          );
+        (p) => p?.placeId == tallies.first.placeId,
+        orElse: () => null,
+      );
     }
     winner ??= detail.places.isNotEmpty ? detail.places.first : null;
 
@@ -204,8 +208,9 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
               allDone
                   ? 'Finding your perfect match...'
                   : 'You\'ve finished voting.\nSit tight while others finish!',
-              style: AppTextStyles.bodyM
-                  .copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -229,24 +234,26 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
                     children: [
                       Text(
                         'Members Voted',
-                        style: AppTextStyles.bodyM
-                            .copyWith(color: AppColors.textSecondary),
+                        style: AppTextStyles.bodyM.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       Text(
                         '$_membersVoted / $_totalMembers',
-                        style: AppTextStyles.headingM
-                            .copyWith(color: AppColors.primary),
+                        style: AppTextStyles.headingM.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
                   ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusFull),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                     child: LinearProgressIndicator(
                       value: progress,
-                      backgroundColor:
-                          AppColors.primary.withValues(alpha: 0.12),
+                      backgroundColor: AppColors.primary.withValues(
+                        alpha: 0.12,
+                      ),
                       color: AppColors.primary,
                       minHeight: 8,
                     ),
@@ -256,6 +263,11 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
             ),
 
             const SizedBox(height: AppSpacing.xl),
+
+            if( _tallies.isNotEmpty) ...[
+              _buildLeaderboard(), 
+              const SizedBox(height: AppSpacing.xl,)
+            ], 
 
             // ── Session label ─────────────────────────────────
             Row(
@@ -269,8 +281,9 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   widget.detail.room.name,
-                  style: AppTextStyles.bodyM
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodyM.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -292,8 +305,9 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Checking every 5 seconds...',
-                  style: AppTextStyles.caption
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -301,6 +315,130 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
             const SizedBox(height: AppSpacing.x3l),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLeaderboard() {
+    final totalVotes = _tallies.fold<int>(0, (sum, t) => sum + t.likes);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.12),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.cardShadow.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.leaderboard_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'CURRENT STANDINGS',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ..._tallies.take(3).toList().asMap().entries.map((entry) {
+            final rank = entry.key + 1;
+            final tally = entry.value;
+            final place = _places.cast<PlaceEntity?>().firstWhere(
+                  (p) => p?.placeId == tally.placeId,
+                  orElse: () => null,
+                );
+            final name = place?.name ?? 'Unknown';
+            final votes = tally.likes;
+            final fraction =
+                totalVotes > 0 ? (votes / totalVotes).clamp(0.0, 1.0) : 0.0;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    child: Text(
+                      '$rank',
+                      style: AppTextStyles.caption.copyWith(
+                        color: rank == 1
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                name,
+                                style: AppTextStyles.bodyM.copyWith(
+                                  fontWeight: rank == 1
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              '$votes ${votes == 1 ? 'vote' : 'votes'}',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusFull),
+                          child: LinearProgressIndicator(
+                            value: fraction,
+                            backgroundColor:
+                                AppColors.primary.withValues(alpha: 0.1),
+                            color: rank == 1
+                                ? AppColors.primary
+                                : AppColors.primary.withValues(alpha: 0.45),
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
