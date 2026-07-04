@@ -5,6 +5,7 @@ class MatchEntity extends Equatable {
   final String roomId;
   final String roomName;
   final String category;
+  final String hostId; 
   final PlaceEntity winner;
   final DateTime completedAt;
 
@@ -12,10 +13,11 @@ class MatchEntity extends Equatable {
     required this.roomId,
     required this.roomName,
     required this.category,
+    required this.hostId, 
     required this.winner,
     required this.completedAt,
   });
 
   @override
-  List<Object?> get props => [roomId, roomName, category, winner, completedAt];
+  List<Object?> get props => [roomId, roomName, category,hostId,  winner, completedAt];
 }

@@ -59,7 +59,8 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(child: _buildSearchBar()),
-            SliverToBoxAdapter(child: _buildCategoryChips(state)),
+            if (state.searchQuery.isEmpty)
+              SliverToBoxAdapter(child: _buildCategoryChips(state)),
             _buildBody(state),
           ],
         ),
@@ -102,9 +103,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
               color: AppColors.textSecondary,
             ),
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.md,
-            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           ),
         ),
       ),
@@ -151,13 +150,17 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 48, color: AppColors.textSecondary),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(height: AppSpacing.md),
               Text(
                 state.errorMessage ?? 'Something went wrong',
-                style: AppTextStyles.bodyM
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyM.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -165,16 +168,14 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusFull),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   ),
                 ),
                 onPressed: () =>
                     ref.read(exploreViewModelProvider.notifier).loadPlaces(),
                 child: Text(
                   'Retry',
-                  style: AppTextStyles.buttonM
-                      .copyWith(color: AppColors.white),
+                  style: AppTextStyles.buttonM.copyWith(color: AppColors.white),
                 ),
               ),
             ],
@@ -191,15 +192,47 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off_rounded,
-                  size: 48, color: AppColors.textSecondary),
+              Icon(
+                Icons.search_off_rounded,
+                size: 48,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(height: AppSpacing.md),
               Text(
                 'No places found',
-                style: AppTextStyles.bodyM
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyM.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
+          ),
+        ),
+      );
+    }
+
+    if (state.searchQuery.isNotEmpty) {
+      return SliverPadding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screenH,
+          AppSpacing.md,
+          AppSpacing.screenH,
+          AppSpacing.x3l,
+        ),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, i) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _SearchResultItem(
+                place: places[i],
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PlaceDetailPage(place: places[i]),
+                  ),
+                ),
+              ),
+            ),
+            childCount: places.length,
           ),
         ),
       );
@@ -348,223 +381,347 @@ class _PlaceCard extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.cardShadow.withValues(alpha: 0.10),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Image with overlays ──────────────────────────
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppSpacing.radiusXl),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.cardShadow.withValues(alpha: 0.10),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Place image
-                  CachedNetworkImage(
-                    imageUrl: place.image,
-                    fit: BoxFit.cover,
-                    placeholder: (ctx, url) => Container(
-                      color: AppColors.primaryBg,
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    ),
-                    errorWidget: (ctx, url, err) => Container(
-                      color: AppColors.primaryBg,
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: AppColors.textSecondary,
-                        size: 40,
-                      ),
-                    ),
-                  ),
-
-                  // Rating badge — top left
-                  Positioned(
-                    top: AppSpacing.md,
-                    left: AppSpacing.md,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusFull),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star_rounded,
-                              color: Color(0xFFFFB800), size: 14),
-                          const SizedBox(width: 3),
-                          Text(
-                            place.rating.toStringAsFixed(1),
-                            style: AppTextStyles.caption.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Image with overlays ──────────────────────────
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppSpacing.radiusXl),
+              ),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Place image
+                    CachedNetworkImage(
+                      imageUrl: place.image,
+                      fit: BoxFit.cover,
+                      placeholder: (ctx, url) => Container(
+                        color: AppColors.primaryBg,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                            strokeWidth: 2,
                           ),
-                        ],
+                        ),
+                      ),
+                      errorWidget: (ctx, url, err) => Container(
+                        color: AppColors.primaryBg,
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: AppColors.textSecondary,
+                          size: 40,
+                        ),
                       ),
                     ),
-                  ),
 
-                  // Bookmark — top right
-                  Positioned(
-                    top: AppSpacing.md,
-                    right: AppSpacing.md,
-                    child: GestureDetector(
-                      onTap: () async {
-                        final added = await ref
-                            .read(bookmarkViewModelProvider.notifier)
-                            .toggle(place.placeId);
-                        if (!context.mounted) return;
-                        if (added == null) {
-                          AppSnackBar.showError(
-                              context, 'Failed to update bookmark');
-                        } else if (added) {
-                          AppSnackBar.showSuccess(
-                              context, 'Added to Bookmarks');
-                        } else {
-                          AppSnackBar.showSuccess(
-                              context, 'Removed from Bookmarks');
-                        }
-                      },
+                    // Rating badge — top left
+                    Positioned(
+                      top: AppSpacing.md,
+                      left: AppSpacing.md,
                       child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: isBookmarked
-                              ? AppColors.primary
-                              : AppColors.white,
-                          shape: BoxShape.circle,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 4,
                         ),
-                        child: Icon(
-                          isBookmarked
-                              ? Icons.bookmark_rounded
-                              : Icons.bookmark_border_rounded,
-                          color: isBookmarked
-                              ? AppColors.white
-                              : AppColors.textSecondary,
-                          size: 18,
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusFull,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Color(0xFFFFB800),
+                              size: 14,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              place.rating.toStringAsFixed(1),
+                              style: AppTextStyles.caption.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+
+                    // Bookmark — top right
+                    Positioned(
+                      top: AppSpacing.md,
+                      right: AppSpacing.md,
+                      child: GestureDetector(
+                        onTap: () async {
+                          final added = await ref
+                              .read(bookmarkViewModelProvider.notifier)
+                              .toggle(place.placeId);
+                          if (!context.mounted) return;
+                          if (added == null) {
+                            AppSnackBar.showError(
+                              context,
+                              'Failed to update bookmark',
+                            );
+                          } else if (added) {
+                            AppSnackBar.showSuccess(
+                              context,
+                              'Added to Bookmarks',
+                            );
+                          } else {
+                            AppSnackBar.showSuccess(
+                              context,
+                              'Removed from Bookmarks',
+                            );
+                          }
+                        },
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: isBookmarked
+                                ? AppColors.primary
+                                : AppColors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isBookmarked
+                                ? Icons.bookmark_rounded
+                                : Icons.bookmark_border_rounded,
+                            color: isBookmarked
+                                ? AppColors.white
+                                : AppColors.textSecondary,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Category badge — bottom right
+                    Positioned(
+                      bottom: AppSpacing.md,
+                      right: AppSpacing.md,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusFull,
+                          ),
+                        ),
+                        child: Text(
+                          _capitalise(place.category),
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Info row ─────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  // Name + location
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          place.name,
+                          style: AppTextStyles.titleL,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                place.location,
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
 
-                  // Category badge — bottom right
-                  Positioned(
-                    bottom: AppSpacing.md,
-                    right: AppSpacing.md,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 4,
+                  const SizedBox(width: AppSpacing.md),
+
+                  // Price range pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBg,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
                       ),
-                      decoration: BoxDecoration(
+                    ),
+                    child: Text(
+                      place.priceRange,
+                      style: AppTextStyles.caption.copyWith(
                         color: AppColors.primary,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusFull),
-                      ),
-                      child: Text(
-                        _capitalise(place.category),
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // ── Info row ─────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                // Name + location
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+  String _capitalise(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+}
+
+class _SearchResultItem extends StatelessWidget {
+  final PlaceEntity place;
+  final VoidCallback onTap;
+
+  const _SearchResultItem({required this.place, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.cardShadow.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Square thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              child: CachedNetworkImage(
+                imageUrl: place.image,
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
+                placeholder: (ctx, url) => Container(
+                  width: 56,
+                  height: 56,
+                  color: AppColors.primaryBg,
+                ),
+                errorWidget: (ctx, url, err) => Container(
+                  width: 56,
+                  height: 56,
+                  color: AppColors.primaryBg,
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+
+            // Name + category & rating
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    place.name,
+                    style: AppTextStyles.titleL,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
                     children: [
                       Text(
-                        place.name,
-                        style: AppTextStyles.titleL,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        _capitalise(place.category),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 3),
-                          Expanded(
-                            child: Text(
-                              place.location,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        '  •  ',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 13,
+                        color: Color(0xFFFFB800),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        place.rating.toStringAsFixed(1),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(width: AppSpacing.md),
-
-                // Price range pill
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryBg,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(
-                    place.priceRange,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+
+            // Chevron
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
       ),
     );
   }
