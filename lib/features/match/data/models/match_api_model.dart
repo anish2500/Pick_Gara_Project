@@ -14,6 +14,8 @@ class MatchApiModel {
 
   final String category;
 
+  final String hostId; 
+
   @JsonKey(name: 'winnerId')
   final PlaceApiModel winner;
 
@@ -24,6 +26,7 @@ class MatchApiModel {
     required this.roomId,
     required this.roomName,
     required this.category,
+    required this.hostId, 
     required this.winner,
     required this.completedAt,
   });
@@ -37,6 +40,7 @@ class MatchApiModel {
         roomId: roomId,
         roomName: roomName,
         category: category,
+        hostId: hostId, 
         winner: winner.toEntity(),
         completedAt: completedAt,
       );
