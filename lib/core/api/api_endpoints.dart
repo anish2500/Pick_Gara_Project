@@ -34,4 +34,6 @@ class ApiEndpoints {
 
   static const String completedRooms = '/rooms/completed'; 
   static String completeRoom(String roomId) => '/rooms/$roomId/complete'; 
+
+  static const String friends = '/friends'; 
 }

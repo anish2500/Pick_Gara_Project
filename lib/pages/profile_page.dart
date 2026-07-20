@@ -9,6 +9,7 @@ import 'package:mero_choice_application/core/theme/app_text_styles.dart';
 import 'package:mero_choice_application/features/auth/presentation/state/auth_state.dart';
 import 'package:mero_choice_application/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:mero_choice_application/features/bookmark/presentation/page/bookmarks_page.dart';
+import 'package:mero_choice_application/features/friend/presentation/pages/friends_list_page.dart';
 import 'package:mero_choice_application/pages/my_activity_page.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -165,7 +166,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _MenuItem(
               icon: Icons.group_outlined,
               label: 'Friends List',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FriendsListPage()),
+                );
+              },
             ),
             const SizedBox(height: AppSpacing.md),
 
