@@ -9,7 +9,7 @@ import 'package:mero_choice_application/features/match/presentation/view_model/m
 import 'package:mero_choice_application/features/place/domain/entities/place_entity.dart';
 import 'package:mero_choice_application/features/room/domain/entities/room_detail_entity.dart';
 import 'package:mero_choice_application/features/room/presentation/page/session_room_page.dart';
-import 'package:mero_choice_application/features/room/presentation/page/swiping_room_page.dart';
+import 'package:mero_choice_application/features/room/presentation/page/waiting_room_page.dart';
 import 'package:mero_choice_application/features/room/presentation/state/active_rooms_state.dart';
 import 'package:mero_choice_application/features/room/presentation/view_model/active_rooms_view_model.dart';
 import 'package:mero_choice_application/features/vote/domain/entities/vote_entity.dart';
@@ -259,12 +259,28 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   : 0.0,
               avatarAssets: const [],
               buttonText: 'Open',
-              onSwipe: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SessionRoomPage(room: detail.room),
-                ),
-              ),
+              onSwipe: () {
+                final membersVoted = detail.voteStats?.membersVoted ?? 0;
+                if (membersVoted > 0) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => WaitingRoomPage(
+                        room: detail.room,
+                        detail: detail,
+                        voteStats: detail.voteStats,
+                      ),
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SessionRoomPage(room: detail.room),
+                    ),
+                  );
+                }
+              },
             ),
           ),
         ),
@@ -323,7 +339,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               onSwipe: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => SwipingRoomPage(room: detail.room),
+                  builder: (_) => WaitingRoomPage(
+                    room: detail.room,
+                    detail: detail,
+                    voteStats: detail.voteStats,
+                  ),
                 ),
               ),
             ),

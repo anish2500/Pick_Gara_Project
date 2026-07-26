@@ -142,7 +142,21 @@ class _WaitingRoomPageState extends ConsumerState<WaitingRoomPage>
       appBar: AppBar(
         backgroundColor: AppColors.white,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.primary,
+          ),
+          onPressed: () {
+            _pollingTimer?.cancel();
+            _pulseController.stop();
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/dashboard',
+              (route) => false,
+            );
+          },
+        ),
         title: Text(
           'Waiting Room',
           style: AppTextStyles.headingM.copyWith(color: AppColors.primary),
